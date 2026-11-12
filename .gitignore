@@ -1,0 +1,15 @@
+.gradle/
+.idea/
+local.properties
+**/build/
+*.iml
+*.pdf
+*.keystore
+
+tmp/
+tmp_read_cv.py
+
+.build/
+refine.py
+
+output/
