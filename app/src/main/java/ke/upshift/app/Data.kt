@@ -6,6 +6,13 @@ import org.json.JSONObject
 import java.time.LocalDate
 import java.time.ZoneId
 import kotlin.math.roundToInt
+import com.google.firebase.firestore.ListenerRegistration
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.launch
 
 data class Role(
     val id: String, val title: String, val company: String, val location: String,
@@ -13,7 +20,16 @@ data class Role(
     val responsibilities: List<String> = listOf("Work with your team to deliver small, well-tested improvements.", "Document your work and communicate progress."),
     val requirements: List<String> = listOf("Evidence of relevant coursework or a personal project.", "Clear communication and willingness to learn."),
     val eligibility: List<String> = listOf("Applicants based in Kenya.", "Students or recent graduates; no previous paid experience required."),
-    val arrangement: String = "Internship · 3 months"
+    val arrangement: String = "Internship · 3 months",
+    val sourceUrl: String = "",
+    val availabilityStatus: String = "unconfirmed",
+    val collectedDate: String = "",
+    val deadline: String = "",
+    val researchNotes: String = "",
+    val skillInterpretation: String = "",
+    val companyWebsite: String = "",
+    val companyDescription: String = "",
+    val companyOfferings: List<String> = emptyList()
 )
 interface OpportunitiesRepository { fun roles(): List<Role> }
 class DemoOpportunitiesRepository : OpportunitiesRepository {
@@ -79,19 +95,147 @@ class LocalCoachRepository : CoachRepository {
         }
     }
 }
-class AppState(context: Context, val repository: OpportunitiesRepository = DemoOpportunitiesRepository(), private val scorer: MatchScorer = SkillCoverageScorer(), val coach: CoachRepository = LocalCoachRepository()) {
-    val roles = repository.roles()
+class AppState(context: Context, val repository: OpportunitiesRepository = RealOpportunitiesRepository(context), private val scorer: MatchScorer = SkillCoverageScorer(), val coach: CoachRepository = LocalCoachRepository()) {
+    private val context = context.applicationContext
+    val backend = FirebaseBackend(this.context)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private var listeners = listOf<ListenerRegistration>()
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
     private val persistDraft = Runnable { persistProfile() }
-    private val prefs = context.getSharedPreferences("upshift", Context.MODE_PRIVATE)
-    private val json = runCatching { JSONObject(prefs.getString("profile", "{}")!!) }.getOrDefault(JSONObject())
-    var profile by mutableStateOf(StudentProfile(json.optString("name"), json.optString("email"), json.optString("phone"), json.optString("education"), json.optString("skills"), json.optString("summary"), json.optString("projects"), json.optString("experience"), json.optString("location"), json.optString("goal", "Internship"))); private set
-    var entered by mutableStateOf(prefs.getBoolean("entered", false)); private set
-    var saved by mutableStateOf(prefs.getStringSet("saved", emptySet())!!.toSet()); private set
-    var completed by mutableStateOf(prefs.getStringSet("completed", emptySet())!!.toSet()); private set
-    var activityDays by mutableStateOf(prefs.getStringSet("activityDays", emptySet())!!.toSet()); private set
-    private var evidence by mutableStateOf(prefs.getString("evidence", "{}") ?: "{}")
-    var targetId by mutableStateOf(prefs.getString("target", null)); private set
+    private var prefs = this.context.getSharedPreferences("upshift", Context.MODE_PRIVATE)
+    var userId by mutableStateOf<String?>(null); private set
+    var connecting by mutableStateOf(false); private set
+    var restoring by mutableStateOf(backend.uid != null); private set
+    var syncMessage by mutableStateOf(""); private set
+    var cloudReady by mutableStateOf(false); private set
+    var roles by mutableStateOf(repository.roles()); private set
+    var profile by mutableStateOf(StudentProfile()); private set
+    var entered by mutableStateOf(false); private set
+    var saved by mutableStateOf(emptySet<String>()); private set
+    var completed by mutableStateOf(emptySet<String>()); private set
+    var activityDays by mutableStateOf(emptySet<String>()); private set
+    private var evidence by mutableStateOf("{}")
+    var targetId by mutableStateOf<String?>(null); private set
+    private var profileDirty = false
+    private val pendingSaved = mutableMapOf<String, Boolean>()
+    private val pendingLearning = mutableMapOf<String, PendingLearning>()
+    private var targetDirty = false
+    private var pendingTarget = ""
+    private var pendingWrites = 0
+    var saving by mutableStateOf(false); private set
+    init { loadLocal(); if (backend.uid != null) scope.launch { try { connectAccount() } finally { restoring = false } } }
+    private fun loadLocal() {
+        val json = runCatching { JSONObject(prefs.getString("profile", "{}")!!) }.getOrDefault(JSONObject())
+        profile = profileFromCloud(json.keys().asSequence().associateWith { json.optString(it) })
+        entered = prefs.getBoolean("entered", false)
+        saved = prefs.getStringSet("saved", emptySet())!!.toSet()
+        completed = prefs.getStringSet("completed", emptySet())!!.toSet()
+        activityDays = prefs.getStringSet("activityDays", emptySet())!!.toSet()
+        evidence = prefs.getString("evidence", "{}") ?: "{}"
+        targetId = prefs.getString("target", null)
+    }
+    suspend fun connectAccount(name: String = ""): Boolean {
+        val uid = backend.uid ?: return false
+        handler.removeCallbacks(persistDraft)
+        connecting = true; cloudReady = false; entered = false; syncMessage = ""
+        listeners.forEach { it.remove() }; listeners = emptyList()
+        // Never carry another account's or a guest's data into a cloud account.
+        userId = uid; pendingWrites = 0; saving = false
+        prefs = context.getSharedPreferences("upshift-account-$uid", Context.MODE_PRIVATE)
+        profile = StudentProfile(); saved = emptySet(); completed = emptySet()
+        activityDays = emptySet(); evidence = "{}"; targetId = null; roles = repository.roles()
+        profileDirty = prefs.getBoolean("profilePending", false)
+        val localProfile = runCatching { JSONObject(prefs.getString("profile", "{}")!!) }.getOrDefault(JSONObject())
+        if (profileDirty) profile = profileFromCloud(localProfile.keys().asSequence().associateWith { localProfile.optString(it) })
+        pendingSaved.clear(); pendingLearning.clear(); targetDirty = prefs.getBoolean("targetPending", false)
+        pendingTarget = prefs.getString("pendingTarget", "").orEmpty()
+        val savedQueue = runCatching { JSONObject(prefs.getString("savedQueue", "{}")!!) }.getOrDefault(JSONObject())
+        savedQueue.keys().forEach { pendingSaved[it] = savedQueue.optBoolean(it) }
+        val learningQueue = runCatching { JSONObject(prefs.getString("learningQueue", "{}")!!) }.getOrDefault(JSONObject())
+        learningQueue.keys().forEach { skill -> learningQueue.optJSONObject(skill)?.let {
+            pendingLearning[skill] = PendingLearning(it.optString("notes"), it.optBoolean("completed"), it.optString("day"))
+        } }
+        return try {
+            val data = backend.loadUser(uid)
+            if (backend.uid != uid) return false
+            applyCloud(data)
+            if (profile.name.isBlank() && name.isNotBlank()) profile = profile.copy(name = name.trim())
+            profile = profile.copy(email = backend.auth?.currentUser?.email.orEmpty())
+            cloudReady = true
+            listeners = listOf(
+                backend.listenUser(uid, { if (userId == uid) applyCloud(it) }, { if (userId == uid) syncMessage = accountError(it) }),
+                backend.listenLearning(uid, { rows -> if (userId == uid) {
+                    val merged = rows.associateBy { it.skill }.toMutableMap()
+                    pendingLearning.forEach { (skill, pending) -> merged[skill] = CloudLearning(skill, pending.notes, pending.completed) }
+                    completed = merged.values.filter { it.completed }.map { it.skill }.toSet()
+                    evidence = JSONObject(merged.values.associate { it.skill to it.notes }).toString()
+                    prefs.edit().putStringSet("completed", completed).putString("evidence", evidence).apply()
+                } }, { if (userId == uid) syncMessage = accountError(it) }),
+                backend.listenRoles({ if (userId == uid) roles = mergeOpportunities(repository.roles(), it) }, { if (userId == uid) syncMessage = accountError(it) })
+            )
+            if (name.isNotBlank()) update(profile.copy(name = name.trim()))
+            retrySync()
+            entered = profile.name.isNotBlank() && profile.skills.isNotBlank()
+            true
+        } catch (e: TimeoutCancellationException) { syncMessage = "Loading timed out. Check your connection and retry."; false }
+        catch (e: CancellationException) { throw e }
+        catch (e: Exception) { syncMessage = accountError(e); false }
+        finally { connecting = false }
+    }
+    private fun applyCloud(data: Map<String, Any>) {
+        if (!profileDirty) (data["profile"] as? Map<*, *>)?.let { profile = profileFromCloud(it) }
+        var cloudSaved = (data["saved"] as? List<*>)?.filterIsInstance<String>()?.toSet().orEmpty()
+        pendingSaved.forEach { (id, remove) -> cloudSaved = if(remove) cloudSaved-id else cloudSaved+id }
+        saved = cloudSaved
+        targetId = (if(targetDirty) pendingTarget else data["targetId"] as? String)?.ifBlank { null }
+        activityDays = (data["activityDays"] as? List<*>)?.filterIsInstance<String>()?.toSet().orEmpty() + pendingLearning.values.filter { it.completed }.map { it.day }
+        cacheProfile()
+        prefs.edit().putStringSet("saved", saved).putStringSet("activityDays", activityDays).putString("target", targetId).apply()
+    }
+    private fun callback(uid: String): (Exception?) -> Unit {
+        pendingWrites++; saving = true
+        return { error -> if (userId == uid) {
+            pendingWrites = (pendingWrites - 1).coerceAtLeast(0); saving = pendingWrites > 0
+            if (error != null) syncMessage = "Cloud save failed. Your local draft is retained. Retry after checking your connection."
+        } }
+    }
+    private fun persistQueues() {
+        val learning = JSONObject()
+        pendingLearning.forEach { (skill, item) -> learning.put(skill, JSONObject().put("notes",item.notes).put("completed",item.completed).put("day",item.day)) }
+        prefs.edit().putBoolean("profilePending",profileDirty).putBoolean("targetPending",targetDirty)
+            .putString("pendingTarget",pendingTarget).putString("savedQueue",JSONObject(pendingSaved.toMap()).toString())
+            .putString("learningQueue",learning.toString()).apply()
+    }
+    private fun sendSaved(uid: String, id: String, remove: Boolean) {
+        val done=callback(uid)
+        backend.save(uid,id,remove) { error ->
+            if(userId==uid && error==null && pendingSaved[id]==remove) { pendingSaved.remove(id); persistQueues() }
+            done(error)
+        }
+    }
+    private fun sendTarget(uid: String, value: String) {
+        val done=callback(uid)
+        backend.write(uid,mapOf("targetId" to value)) { error ->
+            if(userId==uid && error==null && pendingTarget==value) { targetDirty=false; persistQueues() }
+            done(error)
+        }
+    }
+    private fun sendLearning(uid: String, skill: String, item: PendingLearning) {
+        val done=callback(uid)
+        backend.record(uid,skill,item.notes,item.completed,item.day) { error ->
+            if(userId==uid && error==null && pendingLearning[skill]==item) { pendingLearning.remove(skill); persistQueues() }
+            done(error)
+        }
+    }
+    fun retrySync() {
+        val uid = userId ?: return
+        if (!cloudReady) { scope.launch { connectAccount() }; return }
+        syncMessage = ""
+        if(profileDirty) persistProfile()
+        pendingSaved.toMap().forEach { (id,remove) -> sendSaved(uid,id,remove) }
+        if(targetDirty) sendTarget(uid,pendingTarget)
+        pendingLearning.toMap().forEach { (skill,item) -> sendLearning(uid,skill,item) }
+    }
     fun score(role: Role) = scorer.percentage(role, profile)
     fun rankedRoles() = roles.sortedWith(compareByDescending<Role> { score(it) ?: -1 }.thenBy { it.title })
     fun gaps(role: Role) = role.skills.filter { it.lowercase() !in profile.skillSet() }
@@ -102,24 +246,64 @@ class AppState(context: Context, val repository: OpportunitiesRepository = DemoO
     }
     fun evidenceFor(skill: String) = runCatching { JSONObject(evidence).optString(skill) }.getOrDefault("")
     fun recordStep(skill: String, notes: String) {
+        if (notes.trim().length !in 20..2000) { syncMessage = "Use a reflection of 20 to 2000 characters."; return }
+        if (userId != null && !cloudReady) return
         evidence = JSONObject(evidence).apply { put(skill, notes.trim()) }.toString()
         completed = completed + skill
-        activityDays = activityDays + LocalDate.now(ZoneId.of("Africa/Nairobi")).toString()
+        val day = LocalDate.now(ZoneId.of("Africa/Nairobi")).toString()
+        activityDays = activityDays + day
         prefs.edit().putString("evidence", evidence).putStringSet("completed", completed).putStringSet("activityDays", activityDays).apply()
+        userId?.let { uid ->
+            val item=PendingLearning(notes.trim(),true,day); pendingLearning[skill]=item; persistQueues(); sendLearning(uid,skill,item)
+        }
     }
-    fun undoStep(skill: String) { completed = completed - skill; prefs.edit().putStringSet("completed", completed).apply() }
+    fun undoStep(skill: String) {
+        completed = completed - skill; prefs.edit().putStringSet("completed", completed).apply()
+        userId?.let { uid ->
+            val item=PendingLearning(evidenceFor(skill),false,""); pendingLearning[skill]=item; persistQueues(); sendLearning(uid,skill,item)
+        }
+    }
     fun streak() = learningStreak(activityDays.mapNotNull { runCatching { LocalDate.parse(it) }.getOrNull() }.toSet(), LocalDate.now(ZoneId.of("Africa/Nairobi")))
     fun xp() = completed.size * 25
-    fun enter() { entered = true; prefs.edit().putBoolean("entered", true).apply() }
-    fun leave() { entered = false; prefs.edit().putBoolean("entered", false).apply() }
-    fun target(role: Role) { targetId = role.id; if (role.id !in saved) toggleSaved(role.id); prefs.edit().putString("target", targetId).apply() }
-    fun clearTarget() { targetId = null; prefs.edit().remove("target").apply() }
-    fun update(p: StudentProfile) { profile = p; handler.removeCallbacks(persistDraft); handler.postDelayed(persistDraft, 500) }
-    fun flushProfile() { handler.removeCallbacks(persistDraft); persistProfile() }
-    private fun persistProfile() {
-        val p = profile
-        val j = JSONObject().apply { put("name",p.name); put("email",p.email); put("phone",p.phone); put("education",p.education); put("skills",p.skills); put("summary",p.summary); put("projects",p.projects); put("experience",p.experience); put("location",p.location); put("goal",p.goal) }
-        prefs.edit().putString("profile",j.toString()).apply()
+    fun enter() { entered = true; prefs.edit().putBoolean("entered", true).apply(); flushProfile() }
+    fun leave() { flushProfile(); backend.signOut(); scope.launch { backend.clearCredentialState() }; detach(); userId = null; cloudReady = false
+        prefs = context.getSharedPreferences("upshift", Context.MODE_PRIVATE); loadLocal()
+        pendingSaved.clear(); pendingLearning.clear(); targetDirty=false; pendingWrites=0; saving=false
+        roles = repository.roles(); entered = false; syncMessage = ""
+        prefs.edit().putBoolean("entered", false).apply()
     }
-    fun toggleSaved(id: String) { saved = if (id in saved) saved - id else saved + id; prefs.edit().putStringSet("saved",saved).apply() }
+    private fun detach() { handler.removeCallbacks(persistDraft); listeners.forEach { it.remove() }; listeners = emptyList(); profileDirty = false }
+    fun close() { flushProfile(); detach(); scope.coroutineContext[kotlinx.coroutines.Job]?.cancel() }
+    fun target(role: Role) { targetId = role.id; if (role.id !in saved) toggleSaved(role.id); prefs.edit().putString("target", targetId).apply()
+        userId?.let { targetDirty=true; pendingTarget=role.id; persistQueues(); sendTarget(it,role.id) }
+    }
+    fun clearTarget() { targetId = null; prefs.edit().remove("target").apply()
+        userId?.let { targetDirty=true; pendingTarget=""; persistQueues(); sendTarget(it,"") }
+    }
+    fun update(p: StudentProfile) {
+        if (userId != null && !cloudReady) return
+        profile = if (userId == null) p else p.copy(email = backend.auth?.currentUser?.email.orEmpty())
+        profileDirty = true; cacheProfile(); if(userId!=null) persistQueues(); handler.removeCallbacks(persistDraft); handler.postDelayed(persistDraft, 700)
+    }
+    fun flushProfile() { handler.removeCallbacks(persistDraft); if (profileDirty) persistProfile() }
+    private fun cacheProfile() { prefs.edit().putString("profile", JSONObject(profile.cloudMap()).toString()).apply() }
+    private fun persistProfile() {
+        cacheProfile()
+        val uid = userId
+        if (uid != null && cloudReady) {
+            val snapshot = profile
+            val done = callback(uid)
+            backend.write(uid, mapOf("profile" to snapshot.cloudMap())) { error ->
+                if (userId == uid && error == null && profile == snapshot) { profileDirty = false; persistQueues() }
+                done(error)
+            }
+        } else if (uid == null) profileDirty = false
+    }
+    fun toggleSaved(id: String) {
+        val remove = id in saved
+        saved = if (remove) saved - id else saved + id; prefs.edit().putStringSet("saved",saved).apply()
+        userId?.let { pendingSaved[id]=remove; persistQueues(); sendSaved(it,id,remove) }
+    }
 }
+
+private data class PendingLearning(val notes: String, val completed: Boolean, val day: String)

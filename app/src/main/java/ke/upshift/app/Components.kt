@@ -80,7 +80,8 @@ val OrangeInk=Color(0xFF85430E)
 @Composable fun ProfileFields(state:AppState) {
     val p=state.profile
     Field("Full name",p.name){state.update(state.profile.copy(name=it))}
-    Field("Email",p.email){state.update(state.profile.copy(email=it))}
+    if(state.userId != null) OutlinedTextField(p.email,{},readOnly=true,label={Text("Account email")},modifier=Modifier.fillMaxWidth())
+    else Field("Email",p.email){state.update(state.profile.copy(email=it))}
     Field("Phone (optional)",p.phone){state.update(state.profile.copy(phone=it))}
     Field("Location",p.location){state.update(state.profile.copy(location=it))}
     Field("Education and dates",p.education,false){state.update(state.profile.copy(education=it))}

@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function owner(uid) { return request.auth != null && request.auth.uid == uid; }
+    function text(value, size) { return value is string && value.size() <= size; }
+    function profile(p) {
+      return p is map
+        && p.keys().hasAll(['name','email','phone','education','skills','summary','projects','experience','location','goal'])
+        && p.keys().hasOnly(['name','email','phone','education','skills','summary','projects','experience','location','goal'])
+        && text(p.name,150) && text(p.email,254) && p.email == request.auth.token.email
+        && text(p.phone,100) && text(p.education,2000) && text(p.skills,2000)
+        && text(p.summary,10000) && text(p.projects,10000) && text(p.experience,10000)
+        && text(p.location,300) && text(p.goal,200);
+    }
+    match /users/{uid} {
+      allow read: if owner(uid);
+      allow create, update: if owner(uid)
+        && request.resource.data.keys().hasAll(['profile','saved','targetId','activityDays'])
+        && request.resource.data.keys().hasOnly(['profile','saved','targetId','activityDays'])
+        && profile(request.resource.data.profile)
+        && request.resource.data.saved is list && request.resource.data.saved.size() <= 500
+        && text(request.resource.data.targetId,200)
+        && request.resource.data.activityDays is list && request.resource.data.activityDays.size() <= 3660;
+      allow delete: if false;
+      match /learning/{skillId} {
+        allow read: if owner(uid);
+        allow create, update: if owner(uid)
+          && skillId in ['html','css','javascript','git','sql','python','excel','statistics','kotlin','android','testing','rest-apis','writing','canva','figma','accessibility','research','networking','communication']
+          && request.resource.data.keys().hasAll(['notes','completed'])
+          && request.resource.data.keys().hasOnly(['notes','completed'])
+          && request.resource.data.completed is bool
+          && text(request.resource.data.notes,2000)
+          && request.resource.data.notes.size() >= 20;
+        allow delete: if owner(uid);
+      }
+    }
+    match /opportunities/{id} {
+      allow read: if request.auth != null;
+      // Publish reviewed jobs using the console or an Admin SDK operator tool.
+      allow write: if false;
+    }
+    match /companies/{id} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+    // Company ownership and moderation are enforced by the authenticated API.
+    match /partner_companies/{id} { allow read, write: if false; }
+    match /listing_submissions/{id} { allow read, write: if false; }
+    match /vacancy_sources/{id} { allow read, write: if false; }
+    match /listing_audit/{id} { allow read, write: if false; }
+  }
+}
