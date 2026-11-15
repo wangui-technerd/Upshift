@@ -10,6 +10,7 @@ android {
     defaultConfig {
         buildConfigField("boolean", "FIREBASE_EMULATORS", "false")
         buildConfigField("String", "AI_BASE_URL", "\"${providers.gradleProperty("aiBaseUrl").orNull ?: ""}\"")
+        buildConfigField("String", "VACANCY_BASE_URL", "\"${providers.gradleProperty("vacancyBaseUrl").orNull ?: providers.gradleProperty("aiBaseUrl").orNull ?: ""}\"")
     }
     buildTypes {
         getByName("debug") { buildConfigField("boolean", "FIREBASE_EMULATORS", firebaseEmulators.toString()) }

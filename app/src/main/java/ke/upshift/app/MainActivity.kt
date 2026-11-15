@@ -17,6 +17,7 @@ import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 
 class UpShiftViewModel(application: Application) : AndroidViewModel(application) {
     val state = AppState(application)
@@ -44,6 +45,11 @@ class AppFragment : Fragment() {
 }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable fun Upshift(state: AppState) {
+    val workspaceContext=LocalContext.current
+    val workspacePrefs=remember { workspaceContext.getSharedPreferences("upshift-workspace",android.content.Context.MODE_PRIVATE) }
+    var recruiterMode by rememberSaveable { mutableStateOf(workspacePrefs.getString("last","student")=="recruiter") }
+    val workspaceScope=rememberCoroutineScope()
+    fun openRecruiter() { recruiterMode=true;workspacePrefs.edit().putString("last","recruiter").apply() }
     var tab by rememberSaveable { mutableStateOf("Matches") }
     var detail by rememberSaveable { mutableStateOf<String?>(null) }
     var page by rememberSaveable { mutableStateOf("") }
@@ -59,11 +65,12 @@ class AppFragment : Fragment() {
     }
     UpshiftTheme {
         Box(Modifier.fillMaxSize()) {
-            if (state.restoring) Surface(color=Paper,modifier=Modifier.fillMaxSize()) {
+            if(recruiterMode) RecruiterWorkspace(state) { workspaceScope.launch { if(state.backend.uid!=null)state.connectAccount();recruiterMode=false;workspacePrefs.edit().putString("last","student").apply() } }
+            else if (state.restoring) Surface(color=Paper,modifier=Modifier.fillMaxSize()) {
                 Column(Modifier.fillMaxSize(),verticalArrangement=Arrangement.Center,horizontalAlignment=Alignment.CenterHorizontally) {
                     CircularProgressIndicator(); Text("Loading your account")
                 }
-            } else if (!state.entered) Surface(color=Paper,modifier=Modifier.fillMaxSize()) { EntryFlow(state) }
+            } else if (!state.entered) Surface(color=Paper,modifier=Modifier.fillMaxSize()) { EntryFlow(state,recruiter={openRecruiter()}) }
             else Scaffold(
                 topBar = {
                     Surface(color=Paper) {
@@ -72,6 +79,7 @@ class AppFragment : Fragment() {
                             Box {
                                 IconButton(onClick={menu=true}) { Icon(painterResource(R.drawable.ic_menu),contentDescription="Open menu",tint=BrandDeep) }
                                 DropdownMenu(expanded=menu,onDismissRequest={menu=false}) {
+                                    DropdownMenuItem(text={Text("Company workspace")},onClick={menu=false;openRecruiter()})
                                     DropdownMenuItem(text={Text("Saved roles")},onClick={page="saved";detail=null;menu=false})
                                     DropdownMenuItem(text={Text("Edit profile")},onClick={page="edit";detail=null;menu=false})
                                     if(state.userId != null) DropdownMenuItem(text={Text("AI tools")},onClick={page="ai";detail=null;menu=false})
