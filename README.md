@@ -1,5 +1,7 @@
 # Upshift
 
+Project status and remaining submission work: [completion checklist](docs/PROJECT_COMPLETION_CHECKLIST.md). It reviews the frontend, backend, recruiter and AI work with owners and completion criteria.
+
 ## AI notebook
 
 The main AI notebook is [UpShift_Clear_Steps.ipynb](ai/notebooks/UpShift_Clear_Steps.ipynb). It contains the problem, loading and cleaning, EDA, model training, evaluation, an end-to-end example, model saving and an AI-service interface in one file. It includes executed outputs and short explanations. Open it in Colab and run from top to bottom using the three original CSVs. See [the AI guide](ai/README.md) for the engineering handoff.

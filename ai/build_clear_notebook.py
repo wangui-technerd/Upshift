@@ -406,6 +406,7 @@ def job_skills(text):
 md('''### 4.5 Compare meaning as well as words
 
 MiniLM is a pretrained model that turns text into a list of numbers representing meaning. It is **not trained on our CV–job pairs**. For long texts we average up to four sampled sections. Some content is omitted. Saved vectors are reused only when both the texts and model settings match; a fresh CPU run can take about 20–30 minutes.''')
+code('''%pip uninstall -y torchvision torchaudio''')
 code('''import torch
 from sentence_transformers import SentenceTransformer
 
@@ -754,6 +755,7 @@ notebook=nb.v4.new_notebook(cells=cells,metadata={
     'language_info':{'name':'python','version':'3.12.14'}})
 for i,cell in enumerate(cells):
     if cell.cell_type=='code':
+        if cell.source.startswith('%pip '):continue
         try:compile(cell.source,f'cell_{i}','exec')
         except SyntaxError as error:raise SyntaxError(f'Notebook cell {i}: {error}')from error
 target=ROOT/'notebooks/UpShift_Clear_Steps.ipynb'
