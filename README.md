@@ -1,4 +1,10 @@
-# Upshift Android frontend
+# Upshift
+
+## AI notebook
+
+The main AI notebook is [UpShift_Clear_Steps.ipynb](ai/notebooks/UpShift_Clear_Steps.ipynb). It contains the problem, loading and cleaning, EDA, model training, evaluation, an end-to-end example, model saving and an AI-service interface in one file. It includes executed outputs and short explanations. Open it in Colab and run from top to bottom using the three original CSVs. See [the AI guide](ai/README.md) for the engineering handoff.
+
+## Android frontend
 
 Open this folder in Android Studio, sync Gradle and run `app` (Android 8/API 26+, compile SDK 37). Android Studio's bundled JBR is supported. Build output is under the system temporary directory in `upshift-build/<workspace-hash>/app` to avoid recurring Windows locks in the synced workspace. The recommended optimized APK is `output/apk/Upshift-preview.apk`. Select the preview build variant for performance checks.
 

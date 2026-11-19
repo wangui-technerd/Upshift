@@ -13,3 +13,19 @@ tmp_read_cv.py
 refine.py
 
 output/
+
+.venv-ai/
+ai/data/
+ai/artifacts/
+ai/results/
+ai/.cache/
+ai/.jupyter/
+ai/notebook_test_temp/
+ai/clear_results/
+ai/notebooks/*_Partial.ipynb
+# Generated notebook backups; the main all-in-one notebook is tracked.
+ai/notebooks/*_Executed.ipynb
+ai/notebooks/UpShift_AI_Complete.ipynb
+ai/upshift_ai_handoff.zip
+__pycache__/
+.pytest_cache/
