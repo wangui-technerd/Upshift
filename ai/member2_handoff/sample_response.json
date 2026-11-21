@@ -1,0 +1,321 @@
+{
+  "status": "matches_found",
+  "method": "semantic",
+  "catalogue_status": "historical_research_not_live",
+  "matches": [
+    {
+      "job_id": "3886478951",
+      "title": "Junior Fullstack Software Engineer",
+      "company_name": "myGwork - LGBTQ+ Business Community",
+      "description": "This inclusive employer is a member of myGwork \u2013 the largest global platform for the LGBTQ+ business community.  \n\nWe are on the lookout for a Junior Fullstack Engineer to join our growing engineering team. This role provides an exceptional chance to immerse yourself in web development, contributing to both the front and back ends of our web application. You'll be part of a skilled team, crafting clean code with the latest technologies and participating in the entire software development lifecycle.\n\nAs a Junior Fullstack Software Engineer in our engineering team, you will have an exceptional chance to immerse yourself in web development, contributing to both the front and back ends of our web application. You'll be part of a skilled team, crafting clean code with the latest technologies and participating in the entire software development lifecycle. This role provides an opportunity to develop high-quality code for our web application using TypeScript, React, Node.js, Go, Java, and other modern tools, and to collaborate on feature planning and implementation across the full stack.\n\nJob Responsibilities\n\nDevelop high-quality code for our web application using TypeScript, React, Node.js, Go, Java, and other modern toolsCollaborate on feature planning and implementation across the full stackEngage in sprint planning, retrospectives, and technical roadmap discussionsEnsure seamless feature integration from development to production in collaboration with designers and product managersAdhere to coding, testing, and deployment best practices\n\nRequired Qualifications, Capabilities And Skills\n\nBachelor\u2019s degree in Computer Science or related field, or equivalent experience1+ year of software development experience or demonstrable contributions to a private or open source software projectProficiency in JavaScript, React, and/or backend development in Node, Go, or JavaSolid grasp of web development fundamentals like HTML, CSS, REST, and APIsEagerness to learn new technologies and frameworksYou are empathetic, curious, and pragmatic\n\nPreferred Qualifications, Capabilities And Skills\n\nExperience with TypeScript, Redux, Chakra UI, NextJS, GraphQL, or similar technologiesFamiliarity with the Agile development process and experience participating in sprints and team meetingsExperience in writing tests and ensuring code quality through continuous integration and deployment practices",
+      "location": "New York, United States",
+      "work_type": "Full-time",
+      "experience_level": "Entry level",
+      "similarity": 0.584994,
+      "ranking_method": "semantic",
+      "skill_coverage": 0.0,
+      "skills_match_percentage": 0,
+      "matched_skills": [],
+      "required_skills_not_mentioned": [
+        {
+          "id": "http://data.europa.eu/esco/skill/dba46f87-0831-49cd-a1c7-340a653c0221",
+          "label": "Agile development"
+        },
+        {
+          "id": "http://data.europa.eu/esco/skill/867137fb-ff1b-4ca3-99f3-cb6969aa2c68",
+          "label": "TypeScript"
+        }
+      ],
+      "preferred_skills_not_mentioned": [],
+      "mentioned_other_skills": [
+        {
+          "id": "http://data.europa.eu/esco/skill/e5d1f825-60ed-4bdd-872a-e748c387f777",
+          "label": "CSS"
+        },
+        {
+          "id": "urn:upshift:skill:html",
+          "label": "HTML"
+        },
+        {
+          "id": "http://data.europa.eu/esco/skill/19a8293b-8e95-4de3-983f-77484079c389",
+          "label": "Java"
+        },
+        {
+          "id": "http://data.europa.eu/esco/skill/3cd569a2-4f88-4c1e-9995-8dce8c5e51a7",
+          "label": "JavaScript"
+        },
+        {
+          "id": "urn:upshift:skill:node-js",
+          "label": "Node.js"
+        },
+        {
+          "id": "urn:upshift:skill:react",
+          "label": "React"
+        },
+        {
+          "id": "http://data.europa.eu/esco/skill/7b5cce4d-c7fe-4119-b48f-70aa05391787",
+          "label": "computer science"
+        }
+      ],
+      "is_expired": true,
+      "eligibility_status": "unverified",
+      "listed_date": "2024-04-09 05:34:04+00:00",
+      "expiry_date": "2024-05-09 05:34:04+00:00",
+      "application_url": "http://www.mygwork.com/en/jobs/jpmorgan-chase-co-junior-fullstack-software-engineer/detail/4543866",
+      "job_posting_url": "https://www.linkedin.com/jobs/view/3886478951/?trk=jobs_biz_prem_srch",
+      "skills_mentioned": [],
+      "skills_not_mentioned": [
+        "Agile development",
+        "TypeScript"
+      ]
+    },
+    {
+      "job_id": "3902868196",
+      "title": "Software Engineering Intern",
+      "company_name": "Flogistix, LP",
+      "description": "Job Title: Software Engineering Intern\nDepartment: Business Solutions\nReports To: VP of Software Engineering\nJob Summary: Our mission is to leverage creative technology in the oil and gas industry to eliminate emissions and move us towards a more sustainable future. We are enabling that mission by streaming, processing, structuring, and reporting on a wide variety of data from both our Vapor Recovery Units and our Drone Fleets. Leveraging the latest in cloud computing and technology, we build the systems that power all of our operations. Are you a student that is looking to leverage software to make an impact on the world? Are you excited about the prospect of applying your knowledge to real-world scenarios? Do you often find yourself thinking about how to break big problems into smaller and more manageable solutions? Do you enjoy developing software that interfaces with hardware? Are you curious about how software is revolutionizing the energy industry? Come join the software engineering team at Flogistix and make an impact! This role is for a software engineering intern who thinks deeply about how they can build and deploy systems that solve real world challenges. As an intern, you will be working with real systems that empower our internal and external facing products. You will be exposed and learn to develop solutions in a version controlled and collaborative environment. You will deliver work that will have a positive impact on our products and on the environment as a whole. The Software Engineering department at Flogistix is a growing and product focused organization delivering products that have a direct impact on the environment. We are a skillful team composed of software engineering, quality assurance, data engineering, and data science professionals. Together we work to create, maintain, and scale our multi-platform solutions in a collaborative, rewarding, and forward-thinking environment. If you would like to work with a team of talented and results-driven engineers that contribute to a direct positive impact on our environment, then Flogistix is the place for you!\nResponsibilities:Implement solutions with empathy of the end user in mindWork with existing team to understand and implement frontend and backend systems Partner with product design to understand technical feasibility of solutions Leverage version control and the software development lifecycle to deliver features and applications Learn to write reliable, well structured, and tested code in a CI/CD environment Communicate clearly and effectively with team members, the product group, and key stakeholders of the business Leverage JIRA to track, manage, and catalog work items, defects, resolutions as a part of an agile team Deliver features and work tasks with oversight and assistance from leadership\nRequirements: \nEducation: Attending higher education for a Computer Science, Engineering, AI or related field\nSkills: Exposure to fundamental software development principles such as data structures, algorithms, networking and other core technologies Experience with one OOP or Functional programming language such as Python, C#, Java or other relevant programming languages Clear and effective written and oral communication about challenging computer science conceptsMust be reliable and dependable, work all shifts and arrive on timeMust be responsible and safe and adhere to all Flogistix safety proceduresPreferred Qualifications:Proficiency in fundamental software development principles including data structures, algorithms, networking and other core technologiesProficiency with one OOP or Functional programming language such as Python, C#, Java or other relevant programming languagesWorking Conditions:Must be able to lift up to 15lbs and be able to set up computer/tech equipment\nFlogistix is an Equal Opportunity Employer.Application Process: To apply go to www.flogistix.com/careers",
+      "location": "Oklahoma City Metropolitan Area",
+      "work_type": "Internship",
+      "experience_level": "",
+      "similarity": 0.563434,
+      "ranking_method": "semantic",
+      "skill_coverage": 0.16666666666666666,
+      "skills_match_percentage": 17,
+      "matched_skills": [
+        {
+          "id": "http://data.europa.eu/esco/skill/ccd0a1d9-afda-43d9-b901-96344886e14d",
+          "label": "Python"
+        }
+      ],
+      "required_skills_not_mentioned": [
+        {
+          "id": "http://data.europa.eu/esco/skill/4c016b68-4116-468c-9dc6-42710c239e4a",
+          "label": "C#"
+        },
+        {
+          "id": "http://data.europa.eu/esco/skill/19a8293b-8e95-4de3-983f-77484079c389",
+          "label": "Java"
+        },
+        {
+          "id": "http://data.europa.eu/esco/skill/25e16679-a7d0-464d-916c-63210001bbab",
+          "label": "act reliably"
+        },
+        {
+          "id": "http://data.europa.eu/esco/skill/199f7919-5114-41b6-b6a5-41e0e4896ec1",
+          "label": "assume responsibility"
+        },
+        {
+          "id": "http://data.europa.eu/esco/skill/7b5cce4d-c7fe-4119-b48f-70aa05391787",
+          "label": "computer science"
+        }
+      ],
+      "preferred_skills_not_mentioned": [],
+      "mentioned_other_skills": [
+        {
+          "id": "http://data.europa.eu/esco/skill/bd14968e-e409-45af-b362-3495ed7b10e0",
+          "label": "cloud technologies"
+        },
+        {
+          "id": "http://data.europa.eu/esco/skill/48db96bf-3314-45c6-bad8-fdb6e20e5639",
+          "label": "data engineering"
+        },
+        {
+          "id": "http://data.europa.eu/esco/skill/edebd83d-35f6-4ed5-a940-6c203d178c01",
+          "label": "data science"
+        }
+      ],
+      "is_expired": true,
+      "eligibility_status": "unverified",
+      "listed_date": "2024-04-19 22:37:54+00:00",
+      "expiry_date": "2024-10-16 22:37:35+00:00",
+      "application_url": "",
+      "job_posting_url": "https://www.linkedin.com/jobs/view/3902868196/?trk=jobs_biz_prem_srch",
+      "skills_mentioned": [
+        "Python"
+      ],
+      "skills_not_mentioned": [
+        "C#",
+        "Java",
+        "act reliably",
+        "assume responsibility",
+        "computer science"
+      ]
+    },
+    {
+      "job_id": "3905346696",
+      "title": "Software Developer",
+      "company_name": "Logic Auto",
+      "description": "Overview:We are actively seeking an individual who embodies exceptional motivation, talent, and responsibility, coupled with a resolutely positive attitude, to become an integral part of our esteemed development team. Our ideal candidate will bring not only a wealth of expertise but also a genuine enthusiasm for collaborative work and a commitment to excellence. We believe that fostering a positive work environment is paramount to achieving our goals, and we are eager to welcome someone who shares our dedication to success and teamwork.\nResponsibilities:Collaboratively work with our team to improve and test applicationsAssist in debugging any issues that arise during the development and deployment processProvide creative input and ideas\nRequirements:Pursuing or recently completed a degree in Computer Science, Software Engineering, or a related fieldExperience with React, Nextjs, Java, Typescript, PosgreSQL, Strapi, APIs, Web and Mobile ApplicationsKnowledge of programming languages, Java being a requirementStrong problem-solving skills and the ability to think creativelyExcellent communication and teamwork skillsBonus Knowledge: Good ideas, also cheat codes for marketing, innovative ideasThis internship offers a unique opportunity to work on an exciting and innovative project and startup in the auto industry. You will have the chance to learn from our experienced co-founders, develop your skills in app development, and gain valuable hands-on experience in a fast-paced startup environment. At Logic Auto, we believe in hiring talented individuals who are passionate about what they do. If you are eager to learn and grow as a software/app developer, and are excited about the prospect of working on an innovative project, then we want to hear from you.",
+      "location": "Boston, MA",
+      "work_type": "Internship",
+      "experience_level": "",
+      "similarity": 0.553422,
+      "ranking_method": "semantic",
+      "skill_coverage": 0.16666666666666666,
+      "skills_match_percentage": 17,
+      "matched_skills": [
+        {
+          "id": "urn:upshift:skill:react",
+          "label": "React"
+        }
+      ],
+      "required_skills_not_mentioned": [
+        {
+          "id": "http://data.europa.eu/esco/skill/19a8293b-8e95-4de3-983f-77484079c389",
+          "label": "Java"
+        },
+        {
+          "id": "urn:upshift:skill:teamwork",
+          "label": "Teamwork"
+        },
+        {
+          "id": "http://data.europa.eu/esco/skill/867137fb-ff1b-4ca3-99f3-cb6969aa2c68",
+          "label": "TypeScript"
+        },
+        {
+          "id": "http://data.europa.eu/esco/skill/7b5cce4d-c7fe-4119-b48f-70aa05391787",
+          "label": "computer science"
+        },
+        {
+          "id": "http://data.europa.eu/esco/skill/adc6dc11-3376-467b-96c5-9b0a21edc869",
+          "label": "solve problems"
+        }
+      ],
+      "preferred_skills_not_mentioned": [],
+      "mentioned_other_skills": [
+        {
+          "id": "http://data.europa.eu/esco/skill/469748ce-051a-407e-9099-0c9415ac2705",
+          "label": "approach challenges positively"
+        }
+      ],
+      "is_expired": true,
+      "eligibility_status": "unverified",
+      "listed_date": "2024-04-19 00:30:37+00:00",
+      "expiry_date": "2024-05-19 00:30:37+00:00",
+      "application_url": "",
+      "job_posting_url": "https://www.linkedin.com/jobs/view/3905346696/?trk=jobs_biz_prem_srch",
+      "skills_mentioned": [
+        "React"
+      ],
+      "skills_not_mentioned": [
+        "Java",
+        "Teamwork",
+        "TypeScript",
+        "computer science",
+        "solve problems"
+      ]
+    },
+    {
+      "job_id": "3900943289",
+      "title": "React Front End Developer - Remote",
+      "company_name": "Experis",
+      "description": "We are looking for a skilled react.js developer to join our front-end development team. In this role, you will be responsible for developing and implementing user interface components using React.js concepts and workflows such as Redux, Flux, and Webpack. You will also be responsible for profiling and improving front-end performance and documenting our front-end codebase.\n\nTo ensure success as a react.js developer, you should have in-depth knowledge of JavaScript and React concepts, excellent front-end coding skills, and a good understanding of progressive web applications. Ultimately, a top-class react.js developer should be able to design and build modern user interface components to enhance application performance.\n\nReact.js Developer Responsibilities\n\n Meeting with the development team to discuss user interface ideas and applications.  Reviewing application requirements and interface designs.  Identifying web-based user interactions.  Developing and implementing highly responsive user interface components using react concepts.  Writing application interface codes using JavaScript following react.js workflows.  Troubleshooting interface software and debugging application codes.  Developing and implementing front-end architecture to support user interface concepts.  Monitoring and improving front-end performance.  Documenting application changes and developing updates. \n\n\nReact.js Developer Requirements\n\n Bachelor\u2019s degree in computer science, information technology, or a similar field.  Previous experience working as a react.js developer.  In-depth knowledge of JavaScript, CSS, HTML, and front-end languages.  Knowledge of REACT tools including React.js, Webpack, Enzyme, Redux, and Flux.  Experience with user interface design.  Knowledge of performance testing frameworks including Mocha and Jest.  Experience with browser-based debugging and performance testing software.  Excellent troubleshooting skills.  Good project management skills.",
+      "location": "Phoenix, AZ",
+      "work_type": "Contract",
+      "experience_level": "Entry level",
+      "similarity": 0.550518,
+      "ranking_method": "semantic",
+      "skill_coverage": 1.0,
+      "skills_match_percentage": 100,
+      "matched_skills": [
+        {
+          "id": "http://data.europa.eu/esco/skill/e5d1f825-60ed-4bdd-872a-e748c387f777",
+          "label": "CSS"
+        },
+        {
+          "id": "urn:upshift:skill:html",
+          "label": "HTML"
+        },
+        {
+          "id": "http://data.europa.eu/esco/skill/3cd569a2-4f88-4c1e-9995-8dce8c5e51a7",
+          "label": "JavaScript"
+        },
+        {
+          "id": "urn:upshift:skill:react",
+          "label": "React"
+        }
+      ],
+      "required_skills_not_mentioned": [],
+      "preferred_skills_not_mentioned": [],
+      "mentioned_other_skills": [
+        {
+          "id": "http://data.europa.eu/esco/skill/199f7919-5114-41b6-b6a5-41e0e4896ec1",
+          "label": "assume responsibility"
+        },
+        {
+          "id": "http://data.europa.eu/esco/skill/7b5cce4d-c7fe-4119-b48f-70aa05391787",
+          "label": "computer science"
+        },
+        {
+          "id": "http://data.europa.eu/esco/skill/ddc3119d-1d6e-4324-9125-a3380d299ac5",
+          "label": "computer technology"
+        }
+      ],
+      "is_expired": true,
+      "eligibility_status": "unverified",
+      "listed_date": "2024-04-17 21:14:52+00:00",
+      "expiry_date": "2024-05-17 21:14:52+00:00",
+      "application_url": "https://click.appcast.io/track/j7l1knh?cs=jj7&sjg=6cfq",
+      "job_posting_url": "https://www.linkedin.com/jobs/view/3900943289/?trk=jobs_biz_prem_srch",
+      "skills_mentioned": [
+        "CSS",
+        "HTML",
+        "JavaScript",
+        "React"
+      ],
+      "skills_not_mentioned": []
+    },
+    {
+      "job_id": "3889700612",
+      "title": "Front End Developer",
+      "company_name": "Arrow Search Partners",
+      "description": "About The Company\n\nOur client is a leading Private Equity firm with over $85 billion in AUM. With more than 250 companies, their portfolio is extremely diverse, and have offices located in the US and internationally. They are looking to hire a React Developer to join their headquarters in NYC. This position provides competitive pay, bonus, profit sharing, free benefits, and additional perks.\n\nResponsibilities\n\nWork with lead developer to own the design, development, and maintenance of their primary reporting and forecasting platform which contains multiple modulesSecondary focus is development, design, and support for all middle and back office applicationsPerform testing on new and existing featuresCommunicate with various internal teams for things such as requirement gathering, UAT testing, and providing demos for the business sideWorking within cloud environment\n\nRequirements\n\nBachelor\u2019s degree required5+ years experience using React for front end developmentProficient with typescript programmingExperience working in an agile environment, bi-weekly sprint schedule preferredKnowledge of HTML/CSSStrong communication skills, must have experience collaborating with business users and internal groupsHungry and eager to learn as mentorship/training will be provided for skills such as DevOps and back end development\n\nSalary Range\n\n$130,000 \u2013 $170,000",
+      "location": "New York, NY",
+      "work_type": "Full-time",
+      "experience_level": "Entry level",
+      "similarity": 0.533167,
+      "ranking_method": "semantic",
+      "skill_coverage": 0.5,
+      "skills_match_percentage": 50,
+      "matched_skills": [
+        {
+          "id": "urn:upshift:skill:html",
+          "label": "HTML"
+        },
+        {
+          "id": "urn:upshift:skill:react",
+          "label": "React"
+        }
+      ],
+      "required_skills_not_mentioned": [
+        {
+          "id": "urn:upshift:skill:communication",
+          "label": "Communication"
+        },
+        {
+          "id": "http://data.europa.eu/esco/skill/867137fb-ff1b-4ca3-99f3-cb6969aa2c68",
+          "label": "TypeScript"
+        }
+      ],
+      "preferred_skills_not_mentioned": [],
+      "mentioned_other_skills": [],
+      "is_expired": true,
+      "eligibility_status": "unverified",
+      "listed_date": "2024-04-09 11:22:18+00:00",
+      "expiry_date": "2024-05-09 11:22:18+00:00",
+      "application_url": "",
+      "job_posting_url": "https://www.linkedin.com/jobs/view/3889700612/?trk=jobs_biz_prem_srch",
+      "skills_mentioned": [
+        "HTML",
+        "React"
+      ],
+      "skills_not_mentioned": [
+        "Communication",
+        "TypeScript"
+      ]
+    }
+  ],
+  "model_version": "schema-2-ai-assisted-2026-11-22",
+  "score_definition": "Cosine text similarity, not a hiring probability. Skill coverage is a separate extracted-skill measure.",
+  "validation_status": "single_ai_assisted_review_not_human_validated"
+}

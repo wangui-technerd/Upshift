@@ -27,5 +27,6 @@ ai/notebooks/*_Partial.ipynb
 ai/notebooks/*_Executed.ipynb
 ai/notebooks/UpShift_AI_Complete.ipynb
 ai/upshift_ai_handoff.zip
+ai/student_review/*_pack.zip
 __pycache__/
 .pytest_cache/

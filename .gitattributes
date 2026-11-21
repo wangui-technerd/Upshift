@@ -3,3 +3,4 @@ gradlew text eol=lf
 *.bat text eol=crlf
 *.ttf binary
 *.jar binary
+ai/student_review/** -text -whitespace

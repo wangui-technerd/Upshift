@@ -1,0 +1,21 @@
+case_type,text,expected_label
+praise,The recommendations were helpful and easy to understand.,positive
+praise,I love the clear explanations and useful learning resources.,positive
+praise,Great app! It helped me find a relevant internship.,positive
+praise,The skill-gap guidance was excellent and encouraging.,positive
+expired,All these vacancies expired last year. This is frustrating.,negative
+irrelevant,These jobs are irrelevant to my qualifications.,negative
+cost,The recommended courses are too expensive for me.,negative
+error,The app keeps freezing and I cannot save my CV.,negative
+privacy,I am worried that my private CV information is not safe.,negative
+question,Where can I download my CV?,neutral
+question,How is the matching score calculated?,neutral
+question,Can I filter the roles by location?,neutral
+statement,The screen displays five recommendations.,neutral
+statement,I have completed the SQL course.,neutral
+mixed,"The layout is nice, but all the jobs are expired and unusable.",negative
+mixed,"The recommendations are useful, although the page loads slowly. Overall I like it.",positive
+mixed,Some suggestions fit my profile and some do not.,neutral
+negative,I hate these inaccurate skill assessments.,negative
+positive,"Thank you, the next steps are clear and practical.",positive
+question,Does this course provide a certificate?,neutral

@@ -1,0 +1,73 @@
+{
+  "status": "matches_found",
+  "method": "semantic",
+  "matches": [
+    {
+      "job_id": "fixture-software",
+      "title": "Software intern",
+      "company_name": "FICTIONAL TEST ONLY",
+      "description": "Requirements: Python, Git and SQL. Assist with Flask REST API development.",
+      "similarity": 0.694495,
+      "ranking_method": "semantic",
+      "skill_coverage": 1.0,
+      "skills_match_percentage": 100,
+      "matched_skills": [
+        {
+          "id": "http://data.europa.eu/esco/skill/598de5b0-5b58-4ea7-8058-a4bc4d18c742",
+          "label": "SQL"
+        },
+        {
+          "id": "http://data.europa.eu/esco/skill/ccd0a1d9-afda-43d9-b901-96344886e14d",
+          "label": "Python"
+        },
+        {
+          "id": "urn:upshift:skill:git",
+          "label": "Git"
+        },
+        {
+          "id": "urn:upshift:skill:rest-apis",
+          "label": "REST APIs"
+        }
+      ],
+      "required_skills_not_mentioned": [],
+      "preferred_skills_not_mentioned": [],
+      "eligibility_status": "unverified",
+      "application_url": "",
+      "skills_mentioned": [
+        "SQL",
+        "Python",
+        "Git",
+        "REST APIs"
+      ],
+      "skills_not_mentioned": []
+    },
+    {
+      "job_id": "fixture-lab",
+      "title": "Cell biology intern",
+      "company_name": "FICTIONAL TEST ONLY",
+      "description": "Requirements: tissue culture, molecular biology and laboratory experiments.",
+      "similarity": 0.231424,
+      "ranking_method": "semantic",
+      "skill_coverage": 0.0,
+      "skills_match_percentage": 0,
+      "matched_skills": [],
+      "required_skills_not_mentioned": [
+        {
+          "id": "http://data.europa.eu/esco/skill/8f2a4d74-b16f-4023-8fc1-b8dc8b21ffb9",
+          "label": "molecular biology"
+        }
+      ],
+      "preferred_skills_not_mentioned": [],
+      "eligibility_status": "unverified",
+      "application_url": "",
+      "skills_mentioned": [],
+      "skills_not_mentioned": [
+        "molecular biology"
+      ]
+    }
+  ],
+  "catalogue_status": "backend_supplied_vacancies",
+  "model_version": "schema-2-ai-assisted-2026-11-22",
+  "score_definition": "Cosine text similarity, not a hiring probability. Skill coverage is a separate extracted-skill measure.",
+  "validation_status": "single_ai_assisted_review_not_human_validated"
+}

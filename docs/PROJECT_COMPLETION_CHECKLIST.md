@@ -42,6 +42,8 @@ The frontend pull was already up to date. Backend and recruiter branches were fe
 
 ### 2 Finish the AI evidence
 
+**22 November AI handoff update:** `output/UpShift_Member2_Handoff_AI_Assisted.zip` now contains the schema-2 export, offline encoder, selected-method config, a replacement backend loader, verified sample requests/responses and `UpShift_Final_AI_Assisted.ipynb`. One disclosed AI-assisted review covers 112 pairs; MiniLM won validation pooled NDCG@5. Its test P@5 is 0.333 and pooled NDCG@5 is 0.774 across six fictional profiles. This is not independent human validation. Twenty synthetic sentiment checks scored 16/20, with all errors retained. Actual exported-model API and replacement-loader checks passed offline, and 27 existing regression tests passed. Server deployment, live approved vacancy wiring and Android integration remain open. A04/A05 below remain open because AI-generated examples do not replace human/consented participant evidence.
+
 - [x] **A01 [P1] — AI:** Verified the supplied full Colab run and saved it as the repository notebook: all 41 code cells ran in order without saved errors, semantic vectors were computed, 7 skill checks and 6 API checks passed, and model saving/reloading completed.
 - [ ] **A02 [P0] — AI and Backend:** Freeze one final artifact with model versions, dependency versions and score definitions. Configure its trusted path on the server and verify reload, real recommendations and sentiment without a mocked model.
 - [ ] **A03 [P0] — AI and Backend:** Use the same cleaning, skill identifiers and negation rules during training and serving. The older backend inference still differs from the notebook. Check Python aliases, C++, C#, .NET and no-experience/not-required examples.

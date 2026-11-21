@@ -1,0 +1,29 @@
+{
+  "cases": 20,
+  "label_source": "AI-authored expected labels on synthetic app feedback; not independent human evaluation",
+  "accuracy": 0.8,
+  "macro_f1": 0.800854700854701,
+  "labels": [
+    "negative",
+    "neutral",
+    "positive"
+  ],
+  "confusion_matrix": [
+    [
+      6,
+      0,
+      1
+    ],
+    [
+      2,
+      5,
+      0
+    ],
+    [
+      0,
+      1,
+      5
+    ]
+  ],
+  "use": "Optional feedback triage only; not job ranking, readiness scoring or automatic decisions."
+}

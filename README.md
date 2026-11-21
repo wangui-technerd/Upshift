@@ -4,6 +4,16 @@ Project status and remaining submission work: [completion checklist](docs/PROJEC
 
 ## AI notebook
 
+### Member 2 model handoff — 22 November 2026
+
+Download the complete model package from [AI Model - Member 1 Handoff on our shared Drive](https://drive.google.com/drive/folders/1tfmOnYKapGidW1i8TDKwe2CIQjgVpxpX). Extract `UpShift_Member2_Handoff_AI_Assisted.zip` and follow `START_HERE_MEMBER_2.md`. The package contains the fitted schema-2 bundle, offline MiniLM encoder, selected-method configuration, backend adapter, sample API requests/responses and a checksum verification script. Model binaries are distributed through Drive; source code and small evaluation files are versioned here.
+
+The [final notebook](ai/notebooks/UpShift_Final_AI_Assisted.ipynb) preserves the original executed steps and adds the executed final review and export checks. [Setup instructions and measured results](ai/member2_handoff/START_HERE_MEMBER_2.md), [AI-assisted ratings](ai/student_review/ai_assisted/ratings.csv), [method comparison](ai/student_review/ai_assisted/summary.csv), and [delivery checksum](ai/member2_handoff/drive_delivery.json) are also available in this repository.
+
+The evaluation uses **one AI-assisted reviewer**, 112 student/job pairs and twelve fictional profiles. MiniLM was selected on validation results; independent human validation remains pending. Twenty synthetic app-feedback checks scored 16/20. All 27 existing model/API regression tests and the offline export/adapter checks passed. The bundled vacancy catalogue is historical; Member 2 must connect approved current vacancies, and Member 3 must verify the connected Android journey. Similarity is not a hiring probability.
+
+### Original clear-steps notebook
+
 The main AI notebook is [UpShift_Clear_Steps.ipynb](ai/notebooks/UpShift_Clear_Steps.ipynb). It contains the problem, loading and cleaning, EDA, model training, evaluation, an end-to-end example, model saving and an AI-service interface in one file. It includes executed outputs and short explanations. Open it in Colab and run from top to bottom using the three original CSVs. See [the AI guide](ai/README.md) for the engineering handoff.
 
 ## Android frontend

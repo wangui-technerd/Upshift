@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "offline": true,
+  "checks": [
+    "schema-2 reload and selected method",
+    "unauthorised request rejected",
+    "blank text, boolean top_k and oversized top_k rejected",
+    "selected inference, five descending matches and deterministic repeat",
+    "live-only research request returns no historical jobs",
+    "sentiment HTTP inference",
+    "backend-supplied candidate ranking and empty candidate list",
+    "replacement Models adapter loads schema-2 and runs both backend methods",
+    "27 existing model/API regression tests passed; see regression_tests.txt"
+  ],
+  "cold_semantic_http_seconds": 5.36428359997808,
+  "timing_scope": "Local Windows CPU, includes model loading; not an Android performance benchmark."
+}

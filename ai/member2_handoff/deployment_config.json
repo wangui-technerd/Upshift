@@ -1,0 +1,9 @@
+{
+  "schema_version": 2,
+  "selected_method": "semantic",
+  "review_status": "completed_single_ai_assisted_review",
+  "independent_human_review": false,
+  "sentiment_optional": true,
+  "catalogue_status": "historical_research_not_live",
+  "source_bundle_sha256": "461eecffd4bca5f9dd5e0eec769817b9e91ae073aee63a2ce7f5536a9f49e1a8"
+}
