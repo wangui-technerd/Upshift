@@ -94,7 +94,7 @@ def create_app(model_adapter=None, token_verifier=None, listing_store=None, sour
     def health():
         return {'status':'ok','auth_provider':'firebase','auth_configured':verifier.configured,
                 'model_status':models.state,
-                'sentiment_ready':bool(models.bundle and models.bundle.get('sentiment_model') is not None)}
+                'sentiment_ready':bool(models.bundle and models.bundle.get('sentiment') is not None)}
 
     @app.post('/recommendations')
     def recommendations(body: Recommendations, uid=Depends(user)):
