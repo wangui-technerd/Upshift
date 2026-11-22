@@ -19,7 +19,7 @@ import androidx.recyclerview.widget.*
 import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalUriHandler
 
-@Composable fun MatchesScreen(state:AppState,open:(String)->Unit,profile:()->Unit) {
+@Composable fun MatchesScreen(state:AppState,open:(String)->Unit,profile:()->Unit,recommendations:()->Unit) {
     var query by rememberSaveable{mutableStateOf("")}
     var savedOnly by rememberSaveable{mutableStateOf(false)}
     val roles=state.rankedRoles().filter{(!savedOnly||it.id in state.saved)&&("${it.title} ${it.company} ${it.location} ${it.skills.joinToString()}").contains(query,true)}
@@ -42,6 +42,11 @@ import androidx.compose.ui.platform.LocalUriHandler
                     Text(if(state.profile.skills.isBlank())"Add your skills to see percentages and personalised gaps." else "Open Growth to practise a skill and save what you learn.",style=MaterialTheme.typography.bodyMedium)
                     if(state.profile.skills.isBlank())TextButton(onClick=profile){Text("Add my skills →")}
                 }
+            }
+        }
+        item {
+            Button(onClick = recommendations, modifier = Modifier.fillMaxWidth()) {
+                Text("Get job recommendations")
             }
         }
         item {OutlinedTextField(query,{query=it},label={Text("Search jobs, skills or location")},singleLine=true,modifier=Modifier.fillMaxWidth(),shape=RoundedCornerShape(12.dp))}

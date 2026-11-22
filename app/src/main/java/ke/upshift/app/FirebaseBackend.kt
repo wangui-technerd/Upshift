@@ -59,8 +59,8 @@ class FirebaseBackend(context: Context) : AccountGateway {
     val db: FirebaseFirestore? = app?.let { FirebaseFirestore.getInstance(it) }
     init {
         if (BuildConfig.DEBUG && BuildConfig.FIREBASE_EMULATORS && app != null && emulatorApps.add(app.name)) {
-            auth?.useEmulator("10.0.2.2", 9099)
-            db?.useEmulator("10.0.2.2", 8080)
+            auth?.useEmulator(BuildConfig.FIREBASE_EMULATOR_HOST, 9099)
+            db?.useEmulator(BuildConfig.FIREBASE_EMULATOR_HOST, 8080)
         }
     }
     val configured get() = auth != null
@@ -99,7 +99,7 @@ class FirebaseBackend(context: Context) : AccountGateway {
         } catch (e: CancellationException) { throw e }
         catch (_: androidx.credentials.exceptions.ClearCredentialException) { /* Firebase session is already signed out. */ }
     }
-    suspend fun idToken(): String = auth?.currentUser?.getIdToken(false)?.await()?.token
+    suspend fun idToken(forceRefresh: Boolean = false): String = auth?.currentUser?.getIdToken(forceRefresh)?.await()?.token
         ?: error("Sign in before requesting AI recommendations.")
 
     suspend fun loadUser(uid: String): Map<String, Any> = withTimeout(20000) {

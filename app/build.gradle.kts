@@ -2,6 +2,11 @@ plugins { id("com.android.application"); id("org.jetbrains.kotlin.plugin.compose
 // Missing project configuration keeps guest use available, with an explicit auth error.
 if (file("google-services.json").exists()) apply(plugin = "com.google.gms.google-services")
 val firebaseEmulators = providers.gradleProperty("firebaseEmulators").orNull == "true"
+val firebaseEmulatorHost = providers.gradleProperty("firebaseEmulatorHost").orElse("10.0.2.2").get()
+require(firebaseEmulatorHost in setOf("10.0.2.2", "127.0.0.1")) {
+    "firebaseEmulatorHost must be 10.0.2.2 for Android Emulator or 127.0.0.1 for USB reverse."
+}
+val aiBaseUrl = providers.gradleProperty("aiBaseUrl").orNull
 layout.buildDirectory.set(file("${System.getProperty("java.io.tmpdir")}/upshift-build/${rootProject.projectDir.absolutePath.hashCode()}/app"))
 android {
     namespace = "ke.upshift.app"
@@ -9,11 +14,18 @@ android {
     defaultConfig { applicationId = "ke.upshift.app"; minSdk = 26; targetSdk = 37; versionCode = 1; versionName = "0.1.0" }
     defaultConfig {
         buildConfigField("boolean", "FIREBASE_EMULATORS", "false")
-        buildConfigField("String", "AI_BASE_URL", "\"${providers.gradleProperty("aiBaseUrl").orNull ?: ""}\"")
+        buildConfigField("String", "FIREBASE_EMULATOR_HOST", "\"10.0.2.2\"")
+        buildConfigField("String", "AI_BASE_URL", "\"${aiBaseUrl.orEmpty()}\"")
         buildConfigField("String", "VACANCY_BASE_URL", "\"${providers.gradleProperty("vacancyBaseUrl").orNull ?: providers.gradleProperty("aiBaseUrl").orNull ?: ""}\"")
     }
     buildTypes {
-        getByName("debug") { buildConfigField("boolean", "FIREBASE_EMULATORS", firebaseEmulators.toString()) }
+        getByName("debug") {
+            buildConfigField("boolean", "FIREBASE_EMULATORS", firebaseEmulators.toString())
+            buildConfigField("String", "FIREBASE_EMULATOR_HOST", "\"$firebaseEmulatorHost\"")
+            if (firebaseEmulators && aiBaseUrl.isNullOrBlank()) {
+                buildConfigField("String", "AI_BASE_URL", "\"http://$firebaseEmulatorHost:8122\"")
+            }
+        }
         getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
