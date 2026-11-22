@@ -7,7 +7,7 @@ Firebase Authentication handles email/password, Google sign-in and password rese
 | Method | Path | Purpose |
 | --- | --- | --- |
 | GET | `/health` | Service and optional model readiness |
-| POST | `/recommendations` | Firebase-authenticated `{resume_text, top_k}`; top_k defaults to 5 (1–20) |
+| POST | `/recommendations` | Firebase-authenticated `{resume_text, top_k?, catalogue?, location?}`. Defaults to live vacancies and five results (1–20). |
 | POST | `/sentiment` | Firebase-authenticated `{text}` |
 | POST | `/listings/companies` | Register a company for review |
 | GET | `/listings/companies/mine` | Owned company registrations |
@@ -21,4 +21,8 @@ All routes except `/health` require `Authorization: Bearer <Firebase ID token>`.
 
 Model endpoints return 503 when the required trusted notebook artifact/model is unavailable. Recommendation scores represent text similarity, not hiring probability. The API does not train a model or automatically publish collected adverts.
 
-The schema-2 recommendation response includes its selected ranking method and catalogue status. With the Member 2 handoff installed, the catalogue is historical research data. Live vacancies are served separately by the listings routes.
+### Recommendation catalogues
+
+- `live` (default) ranks Firestore vacancies that are published for application by an approved company. Expiry uses the Africa/Nairobi calendar date, inclusive of the deadline. A reviewed vacancy may have an open deadline. An optional `location` matches the full advertised location or a comma-separated component, ignoring case and repeated whitespace. Users still need to check the advert's eligibility requirements.
+- `research` explicitly requests the historical demo catalogue. Omit `location` for this mode. Research results have blank application and posting URLs and `ready_for_live_application: false`.
+- With no eligible live matches the route returns `status: no_match` and `matches: []`. Firestore unavailability returns HTTP 503. Neither case falls back to research vacancies.

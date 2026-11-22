@@ -47,14 +47,8 @@ def listing_router(store, actor, admin, collector=None):
     @router.get('/vacancies')
     def vacancies(after: str = Query(default='', pattern=r'^[a-zA-Z0-9_-]{0,100}$'),
                   limit: int = Query(default=50, ge=1, le=100), claims=Depends(actor)):
-        from .listing_service import listing_day
-        today = listing_day().isoformat()
         page = store.list('opportunities', after=after, limit=limit)
-        def visible(row):
-            company = store.get('partner_companies', row.get('company_id', '_'))
-            return (row.get('availability_status') == 'published' and company and company['status'] == 'approved'
-                    and (not row.get('deadline') or row['deadline'][:10] >= today))
-        page['items'] = [row for row in page['items'] if visible(row)]
+        page['items'] = service.visible_opportunities(page['items'])
         return page
 
     @router.get('/admin/companies')
