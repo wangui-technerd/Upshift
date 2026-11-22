@@ -1,4 +1,5 @@
 """Firebase-authenticated inference, partner vacancies and selected-source collection."""
+import os
 import threading
 import time
 from collections import OrderedDict
@@ -45,6 +46,8 @@ class RateLimiter:
 def create_app(model_adapter=None, token_verifier=None, listing_store=None, source_collector=None):
     models = model_adapter if model_adapter is not None else Models()
     verifier = token_verifier if token_verifier is not None else FirebaseTokenVerifier()
+    if os.getenv('UPSHIFT_REQUIRE_MODEL') == '1' and (models.state != 'ready' or not verifier.configured):
+        raise RuntimeError('Deployment requires a loaded UpShift model and a configured Firebase project.')
     limiter = RateLimiter()
     app = FastAPI(title='UpShift API', version='0.3.0', description='Firebase-authenticated inference and vacancy management. Data is persisted in Firestore.')
     auth = HTTPBearer(auto_error=False)

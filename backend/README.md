@@ -43,3 +43,6 @@ ranking, add `"catalogue": "research"` to
 token from your project as the Bearer token. The method and ordered job IDs
 should match `sample_response.json`. Without a catalogue override the endpoint
 ranks eligible Firestore vacancies.
+
+For Cloud Run configuration and the post-deployment smoke test, see the
+[deployment guide](../docs/DEPLOY_BACKEND.md).

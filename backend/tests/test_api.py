@@ -71,6 +71,14 @@ class ApiTests(unittest.TestCase):
             self.assertEqual(client.get("/health").json()["model_status"],"not_configured")
             self.assertEqual(client.post("/recommendations",headers=self.headers,json={"resume_text":"Kotlin"}).status_code,503)
             self.assertEqual(client.post("/sentiment",headers=self.headers,json={"text":"Helpful"}).status_code,503)
+    def test_deployment_startup_requires_model_and_firebase(self):
+        with patch.dict("os.environ", {"UPSHIFT_REQUIRE_MODEL": "1"}, clear=True):
+            with self.assertRaisesRegex(RuntimeError, "requires a loaded UpShift model"):
+                create_app(model_adapter=Models(), token_verifier=TestVerifier())
+            with self.assertRaisesRegex(RuntimeError, "configured Firebase project"):
+                create_app(model_adapter=TestModels(), token_verifier=FirebaseTokenVerifier())
+            self.assertIsNotNone(create_app(model_adapter=TestModels(), token_verifier=TestVerifier()))
+
     def test_rate_limit(self):
         limiter=RateLimiter()
         for _ in range(30): limiter.check("a")
