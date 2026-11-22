@@ -101,6 +101,7 @@ class ModelService:
         if len(set(ids)) != len(ids):
             raise ValueError("Vacancy IDs must be unique.")
         docs = []
+        skill_descriptions = []
         for v in vacancies:
             if (
                 not isinstance(v.get("title"), str)
@@ -108,7 +109,12 @@ class ModelService:
                 or not v["description"].strip()
             ):
                 raise ValueError("Each vacancy needs title and nonblank description.")
-            docs.append(clean_text(v["title"] + " " + v["description"]))
+            description = v["description"]
+            requirements = v.get("requirements", [])
+            if requirements:
+                description += "\nRequirements:\n" + "\n".join(requirements)
+            docs.append(clean_text(v["title"] + " " + description))
+            skill_descriptions.append(description)
         query = prepare_resume(text)
         if self.method == "semantic":
             vectors = encode_documents(self._encoder(), [query] + docs)
@@ -131,7 +137,7 @@ class ModelService:
             if float(scores[pos]) <= 0:
                 continue
             v = vacancies[int(pos)]
-            skills = self.bundle["lexicon"].job_skills(v["description"])
+            skills = self.bundle["lexicon"].job_skills(skill_descriptions[int(pos)])
             required = set(skills["required"])
             coverage = len(required & have) / len(required) if required else None
             matches.append(
