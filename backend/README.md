@@ -37,8 +37,9 @@ $env:TRANSFORMERS_OFFLINE = '1'
 ```
 
 Check `GET /health` for `model_status: ready`. If it reports `unavailable`,
-check the server log for the loading error. To check ranking, send the handoff's
-`sample_request.json` to `POST /recommendations` with a Firebase ID token from
-your project as the Bearer token. The method and ordered job IDs should match
-`sample_response.json`. This setup uses the handoff's historical research
-catalogue for the recommendation route.
+check the server log for the loading error. To check the handoff's sample
+ranking, add `"catalogue": "research"` to
+`sample_request.json` and send it to `POST /recommendations` with a Firebase ID
+token from your project as the Bearer token. The method and ordered job IDs
+should match `sample_response.json`. Without a catalogue override the endpoint
+ranks eligible Firestore vacancies.

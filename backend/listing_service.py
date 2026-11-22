@@ -143,6 +143,86 @@ class ListingService:
             return {key: row}, row
         return self.store.transact([key], change)
 
+    def visible_opportunities(self, rows):
+        today = listing_day()
+        approved = {}
+        visible = []
+        for row in rows:
+            company_id = row.get('company_id')
+            if row.get('availability_status') != 'published' or not company_id:
+                continue
+            deadline = row.get('deadline')
+            if deadline:
+                try:
+                    if date.fromisoformat(deadline[:10]) < today:
+                        continue
+                except (TypeError, ValueError):
+                    continue
+            if company_id not in approved:
+                company = self.store.get('partner_companies', company_id)
+                approved[company_id] = bool(company and company.get('status') == 'approved')
+            if approved[company_id]:
+                visible.append(row)
+        return visible
+
+    def live_candidates(self, location):
+        normalized_location = ' '.join(location.casefold().split()) if location else None
+        cursor = ''
+        while True:
+            page = self.store.list('opportunities', after=cursor, limit=100,
+                                   availability_status='published')
+            for row in self.visible_opportunities(page['items']):
+                if row.get('ready_for_live_application') is not True or row.get('is_fictional'):
+                    continue
+                if not all(isinstance(row.get(key), str) and row[key].strip()
+                           for key in ('id', 'title', 'description', 'location')):
+                    continue
+                advertised = ' '.join(row['location'].casefold().split())
+                if normalized_location and normalized_location != advertised:
+                    if normalized_location not in {part.strip() for part in advertised.split(',')}:
+                        continue
+                yield row
+            cursor = page['next_cursor']
+            if not cursor:
+                return
+
+    def recommend(self, models, text, top_k, location):
+        from google.api_core.exceptions import GoogleAPICallError, RetryError
+
+        try:
+            rows = {row['id']: row for row in self.live_candidates(location)}
+            candidates = [
+                {'job_id': key, 'title': row['title'], 'description': row['description'],
+                 'company_name': row.get('company', ''),
+                 'application_url': row.get('application_url') or row.get('source_url') or ''}
+                for key, row in rows.items()
+            ]
+            result = models.recommendations_from_vacancies(text, candidates, top_k)
+            # A vacancy may close or change while its score is being computed.
+            ranked = {match['job_id']: self.store.get('opportunities', match['job_id'])
+                      for match in result['matches']}
+            visible = {
+                row['id']: row for row in self.visible_opportunities(
+                    row for row in ranked.values() if row is not None
+                )
+            }
+            matches = []
+            for match in result['matches']:
+                key = match['job_id']
+                row = visible.get(key)
+                if (not row or row.get('revision') != rows[key].get('revision')
+                        or row.get('ready_for_live_application') is not True or row.get('is_fictional')):
+                    continue
+                matches.append({
+                    **match, 'location': row['location'], 'expiry_date': row.get('deadline'),
+                    'job_posting_url': row.get('source_url') or '',
+                    'ready_for_live_application': bool(match['application_url']),
+                })
+        except (GoogleAPICallError, RetryError) as error:
+            raise Problem(503, 'listing_store_unavailable', 'Live vacancies are temporarily unavailable.') from error
+
+        return {**result, 'matches': matches, 'status': 'matches_found' if matches else 'no_match'}
+
     def expire(self):
         count, cursor = 0, ''
         while True:

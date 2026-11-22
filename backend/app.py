@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from .errors import Problem
 from .models import Models
 from .firebase_auth import FirebaseTokenVerifier
+from .listing_service import ListingService
 
 class Body(BaseModel):
     model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
@@ -18,6 +19,8 @@ class Body(BaseModel):
 class Recommendations(Body):
     resume_text: str = Field(min_length=1, max_length=50000)
     top_k: int = Field(default=5, ge=1, le=20, strict=True)
+    catalogue: Literal['live', 'research'] = 'live'
+    location: str | None = Field(default=None, min_length=1, max_length=200)
 
 class Text(Body):
     text: str = Field(min_length=1, max_length=10000)
@@ -87,8 +90,9 @@ def create_app(model_adapter=None, token_verifier=None, listing_store=None, sour
 
     from .listing_api import listing_router
     from .listing_store import FirestoreListingStore
-    app.include_router(listing_router(listing_store if listing_store is not None else FirestoreListingStore(),
-                                     actor, admin, source_collector))
+    store = listing_store if listing_store is not None else FirestoreListingStore()
+    listings = ListingService(store)
+    app.include_router(listing_router(store, actor, admin, source_collector))
 
     @app.get('/health')
     def health():
@@ -98,7 +102,19 @@ def create_app(model_adapter=None, token_verifier=None, listing_store=None, sour
 
     @app.post('/recommendations')
     def recommendations(body: Recommendations, uid=Depends(user)):
-        return models.recommendations(body.resume_text, body.top_k)
+        if body.catalogue == 'research':
+            if body.location is not None:
+                raise Problem(422, 'unsupported_filter', 'Location filtering is available for live vacancies.')
+            result = models.recommendations(body.resume_text, body.top_k)
+            return {
+                **result,
+                'matches': [
+                    {**match, 'application_url': '', 'job_posting_url': '',
+                     'ready_for_live_application': False}
+                    for match in result['matches']
+                ],
+            }
+        return listings.recommend(models, body.resume_text, body.top_k, body.location)
 
     @app.post('/sentiment')
     def sentiment(body: Text, uid=Depends(user)):

@@ -46,12 +46,14 @@ class FirestoreListingStore:
             return result
         return run(db.transaction())
 
-    def list(self, collection, *, owner=None, after='', limit=50):
+    def list(self, collection, *, owner=None, after='', limit=50, availability_status=None):
         from google.cloud.firestore_v1.base_query import FieldFilter
         ref = self.db().collection(collection)
         query = ref.order_by('__name__')
         if owner is not None:
             query = query.where(filter=FieldFilter('owner_uid', '==', owner))
+        if availability_status is not None:
+            query = query.where(filter=FieldFilter('availability_status', '==', availability_status))
         if after:
             query = query.start_after({'__name__': ref.document(after)})
         docs = list(query.limit(limit + 1).stream())
@@ -76,8 +78,9 @@ class MemoryStore:
             self.rows.update(copy.deepcopy(updates))
             return copy.deepcopy(result)
 
-    def list(self, collection, *, owner=None, after='', limit=50):
+    def list(self, collection, *, owner=None, after='', limit=50, availability_status=None):
         with self.lock:
             items = [copy.deepcopy(v) for (c, key), v in sorted(self.rows.items())
-                     if c == collection and key > after and (owner is None or v.get('owner_uid') == owner)]
+                     if c == collection and key > after and (owner is None or v.get('owner_uid') == owner)
+                     and (availability_status is None or v.get('availability_status') == availability_status)]
             return {'items': items[:limit], 'next_cursor': items[limit-1]['id'] if len(items) > limit else None}
