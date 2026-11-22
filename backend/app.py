@@ -22,6 +22,7 @@ class Recommendations(Body):
     top_k: int = Field(default=5, ge=1, le=20, strict=True)
     catalogue: Literal['live', 'research'] = 'live'
     location: str | None = Field(default=None, min_length=1, max_length=200)
+    experience_months: int | None = Field(default=None, ge=0, le=1200, strict=True)
 
 class Text(Body):
     text: str = Field(min_length=1, max_length=10000)
@@ -106,8 +107,8 @@ def create_app(model_adapter=None, token_verifier=None, listing_store=None, sour
     @app.post('/recommendations')
     def recommendations(body: Recommendations, uid=Depends(user)):
         if body.catalogue == 'research':
-            if body.location is not None:
-                raise Problem(422, 'unsupported_filter', 'Location filtering is available for live vacancies.')
+            if body.location is not None or body.experience_months is not None:
+                raise Problem(422, 'unsupported_filter', 'Location and experience filters are available for live vacancies.')
             result = models.recommendations(body.resume_text, body.top_k)
             return {
                 **result,
@@ -117,7 +118,7 @@ def create_app(model_adapter=None, token_verifier=None, listing_store=None, sour
                     for match in result['matches']
                 ],
             }
-        return listings.recommend(models, body.resume_text, body.top_k, body.location)
+        return listings.recommend(models, body.resume_text, body.top_k, body.location, body.experience_months)
 
     @app.post('/sentiment')
     def sentiment(body: Text, uid=Depends(user)):

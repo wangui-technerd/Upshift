@@ -44,10 +44,20 @@ class VacancyInput(StrictBody):
     requirements: list[str] = Field(default_factory=list, max_length=30)
     eligibility: list[str] = Field(default_factory=list, max_length=30)
     deadline: date | None = None
+    minimum_experience_months: int | None = Field(default=None, ge=0, le=1200, strict=True)
 
-    @field_validator('source_url', 'application_url')
+    @field_validator('source_url')
     @classmethod
-    def urls(cls, value): return https_url(value) if value else None
+    def canonical_source(cls, value):
+        return https_url(value)
+
+    @field_validator('application_url')
+    @classmethod
+    def application_destination(cls, value):
+        if not value:
+            return None
+        https_url(value)
+        return value
 
     @field_validator('skills', 'responsibilities', 'requirements', 'eligibility')
     @classmethod

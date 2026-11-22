@@ -1,5 +1,6 @@
 """Partner ownership, moderation and public projections in atomic transactions."""
 import hashlib
+import re
 from datetime import datetime, timezone, date
 from uuid import uuid4
 from zoneinfo import ZoneInfo
@@ -10,6 +11,29 @@ from .listing_models import https_url
 def stamp(): return datetime.now(timezone.utc).isoformat()
 def listing_day(): return datetime.now(ZoneInfo('Africa/Nairobi')).date()
 def identity(*parts): return hashlib.sha256('\n'.join(parts).encode()).hexdigest()[:32]
+
+
+EXPERIENCE_MINIMUM = re.compile(
+    r'(?:(at least|minimum(?: of)?)\s+)?(\d{1,3})(\+)?\s+(years?|months?)\s+(?:of\s+)?'
+    r'(?:work\s+|professional\s+)?experience(\s+(?:is\s+)?required)?[.!]?',
+    re.IGNORECASE,
+)
+
+
+def minimum_experience(row):
+    configured = row.get('minimum_experience_months')
+    if type(configured) is int and 0 <= configured <= 1200:
+        return configured
+    # Older adverts may have standalone, explicitly mandatory generic requirements.
+    thresholds = []
+    for requirement in (*(row.get('requirements') or []), *(row.get('eligibility') or [])):
+        match = EXPERIENCE_MINIMUM.fullmatch(requirement.strip())
+        if match:
+            prefix, amount, plus, unit, suffix = match.groups()
+            months = int(amount) * (12 if unit.casefold().startswith('year') else 1)
+            if (prefix or plus or suffix) and months <= 1200:
+                thresholds.append(months)
+    return max(thresholds, default=None)
 
 
 class ListingService:
@@ -165,9 +189,10 @@ class ListingService:
                 visible.append(row)
         return visible
 
-    def live_candidates(self, location):
+    def live_candidates(self, location, experience_months):
         normalized_location = ' '.join(location.casefold().split()) if location else None
         cursor = ''
+        seen_adverts = set()
         while True:
             page = self.store.list('opportunities', after=cursor, limit=100,
                                    availability_status='published')
@@ -181,21 +206,36 @@ class ListingService:
                 if normalized_location and normalized_location != advertised:
                     if normalized_location not in {part.strip() for part in advertised.split(',')}:
                         continue
-                yield row
+                minimum = minimum_experience(row)
+                if experience_months is not None and minimum is not None and experience_months < minimum:
+                    continue
+                try:
+                    canonical_url = https_url(row['source_url'])
+                    application_url = row.get('application_url') or row['source_url']
+                    https_url(application_url)
+                except (AttributeError, KeyError, TypeError, ValueError):
+                    continue
+                if canonical_url in seen_adverts:
+                    continue
+                seen_adverts.add(canonical_url)
+                yield row, minimum, application_url
             cursor = page['next_cursor']
             if not cursor:
                 return
 
-    def recommend(self, models, text, top_k, location):
+    def recommend(self, models, text, top_k, location, experience_months=None):
         from google.api_core.exceptions import GoogleAPICallError, RetryError
 
         try:
-            rows = {row['id']: row for row in self.live_candidates(location)}
+            rows = {
+                row['id']: (row, minimum, application_url)
+                for row, minimum, application_url in self.live_candidates(location, experience_months)
+            }
             candidates = [
                 {'job_id': key, 'title': row['title'], 'description': row['description'],
                  'company_name': row.get('company', ''),
-                 'application_url': row.get('application_url') or row.get('source_url') or ''}
-                for key, row in rows.items()
+                 'application_url': application_url, 'requirements': (row.get('requirements') or [])}
+                for key, (row, _, application_url) in rows.items()
             ]
             result = models.recommendations_from_vacancies(text, candidates, top_k)
             # A vacancy may close or change while its score is being computed.
@@ -210,13 +250,20 @@ class ListingService:
             for match in result['matches']:
                 key = match['job_id']
                 row = visible.get(key)
-                if (not row or row.get('revision') != rows[key].get('revision')
+                original, minimum, _ = rows[key]
+                if (not row or row.get('revision') != original.get('revision')
                         or row.get('ready_for_live_application') is not True or row.get('is_fictional')):
                     continue
                 matches.append({
                     **match, 'location': row['location'], 'expiry_date': row.get('deadline'),
                     'job_posting_url': row.get('source_url') or '',
-                    'ready_for_live_application': bool(match['application_url']),
+                    'ready_for_live_application': True,
+                    'requirements': (row.get('requirements') or []),
+                    'eligibility': (row.get('eligibility') or []),
+                    'minimum_experience_months': minimum,
+                    'experience_requirement_status': (
+                        'meets_minimum' if minimum is not None and experience_months is not None else 'unknown'
+                    ),
                 })
         except (GoogleAPICallError, RetryError) as error:
             raise Problem(503, 'listing_store_unavailable', 'Live vacancies are temporarily unavailable.') from error

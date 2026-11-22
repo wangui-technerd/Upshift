@@ -111,7 +111,7 @@ class LiveRecommendationsTests(unittest.TestCase):
             'title': 'Software intern', 'description': 'Build Python services and test APIs.',
             'location': 'Nairobi, Kenya', 'availability_status': 'published',
             'ready_for_live_application': True, 'is_fictional': False, 'revision': 2,
-            'source_url': 'https://example.org/jobs', 'deadline': listing_day().isoformat(),
+            'source_url': f'https://example.org/jobs/{key}', 'deadline': listing_day().isoformat(),
             'owner_uid': 'excluded-from-inference',
         }
         self.store.rows['opportunities', key] = row | overrides
@@ -138,8 +138,37 @@ class LiveRecommendationsTests(unittest.TestCase):
         matches = response.json()['matches']
         self.assertEqual([m['job_id'] for m in matches], ['valid', 'valid-no-deadline'])
         self.assertTrue(matches[0]['ready_for_live_application'])
-        self.assertEqual(matches[0]['application_url'], 'https://example.org/jobs')
+        self.assertEqual(matches[0]['application_url'], 'https://example.org/jobs/valid')
         self.assertNotIn('owner_uid', matches[0])
+
+    def test_applies_explicit_experience_and_preserves_uncertainty(self):
+        self.vacancy('structured', minimum_experience_months=6)
+        self.vacancy('legacy', requirements=['At least 1 year of experience.'])
+        self.vacancy('preferred', requirements=['2 years of experience preferred.'])
+        self.vacancy('specialized', requirements=['1 year of Python experience required.'])
+        response = self.request(experience_months=6).json()
+        by_id = {m['job_id']: m for m in response['matches']}
+        self.assertEqual(set(by_id), {'structured', 'preferred', 'specialized'})
+        self.assertEqual(by_id['structured']['experience_requirement_status'], 'meets_minimum')
+        self.assertEqual(by_id['preferred']['experience_requirement_status'], 'unknown')
+        self.assertEqual(by_id['specialized']['experience_requirement_status'], 'unknown')
+        missing = self.request().json()['matches']
+        self.assertIn('legacy', [m['job_id'] for m in missing])
+        self.assertTrue(all(m['experience_requirement_status'] == 'unknown' for m in missing))
+        zero = self.request(experience_months=0).json()['matches']
+        self.assertNotIn('structured', [m['job_id'] for m in zero])
+
+    def test_deduplicates_public_vacancies_and_preserves_requirements_and_destination(self):
+        source = 'https://careers.example.org/jobs/python'
+        apply = 'https://careers.example.org/apply/python?job=348'
+        self.vacancy('a', source_url=source, application_url=apply,
+                     requirements=['Docker is required.'])
+        self.vacancy('b', source_url=source + '?utm_source=email#details')
+        matches = self.request().json()['matches']
+        self.assertEqual([m['job_id'] for m in matches], ['a'])
+        self.assertEqual(matches[0]['requirements'], ['Docker is required.'])
+        self.assertEqual(matches[0]['application_url'], apply)
+        self.assertEqual(matches[0]['job_posting_url'], source)
 
     def test_excludes_a_vacancy_closed_during_inference(self):
         self.vacancy('changing')
