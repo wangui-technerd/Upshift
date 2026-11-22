@@ -17,3 +17,28 @@ From the repository folder in PowerShell:
 Set UPSHIFT_FIREBASE_PROJECT_ID and server credentials before startup. Open http://127.0.0.1:8000/docs for endpoint details. Use Firebase ID tokens; management routes require the operator custom claim. Environment files are reference templates, not automatically loaded.
 
 No source polling, claims assignment, Firestore publication or deployment happens merely by starting the API. See the guide for explicit operator steps.
+
+## Enable the Member 2 recommendation model
+
+Use Python 3.12 and the original, trusted Member 2 handoff. Extract its
+`artifacts/` folder together, keeping `upshift_bundle.joblib`,
+`deployment_config.json` and the full `semantic_encoder/` directory in the
+same parent. Keep these files outside Git. The supplied configuration selects
+the offline MiniLM semantic encoder.
+
+From the repository root, with your Firebase environment already configured:
+
+```powershell
+.\backend\.venv\Scripts\python.exe -m pip install -r backend\requirements-model.txt
+$env:UPSHIFT_MODEL_PATH = 'C:\path\to\handoff\artifacts\upshift_bundle.joblib'
+$env:HF_HUB_OFFLINE = '1'
+$env:TRANSFORMERS_OFFLINE = '1'
+.\backend\.venv\Scripts\python.exe -m uvicorn backend.app:app --host 127.0.0.1 --port 8000 --no-proxy-headers
+```
+
+Check `GET /health` for `model_status: ready`. If it reports `unavailable`,
+check the server log for the loading error. To check ranking, send the handoff's
+`sample_request.json` to `POST /recommendations` with a Firebase ID token from
+your project as the Bearer token. The method and ordered job IDs should match
+`sample_response.json`. This setup uses the handoff's historical research
+catalogue for the recommendation route.
