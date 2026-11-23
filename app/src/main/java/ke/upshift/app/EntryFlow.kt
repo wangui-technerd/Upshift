@@ -12,8 +12,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 
-@Composable fun EntryFlow(state: AppState, recruiter: () -> Unit = {}) {
-    var screen by rememberSaveable { mutableStateOf(if (state.userId != null && state.cloudReady) "onboarding" else "welcome") }
+@Composable fun EntryFlow(state: AppState, initialScreen: String, recruiter: () -> Unit = {}) {
+    var screen by rememberSaveable { mutableStateOf(if (state.userId != null && state.cloudReady) "onboarding" else initialScreen) }
     var intro by rememberSaveable { mutableIntStateOf(0) }
     var onboarding by rememberSaveable { mutableIntStateOf(0) }
     LaunchedEffect(state.cloudReady) { if(state.cloudReady && state.userId != null) screen = "onboarding" }
@@ -47,7 +47,7 @@ import androidx.compose.ui.unit.dp
             InfoCard("A little progress goes a long way", "Discover suitable roles, build a practical growth path and create your CV.", CoralSoft, OrangeInk)
             Button(onClick = { screen = "intro" }, modifier = Modifier.fillMaxWidth()) { Text("Get started") }
             OutlinedButton(onClick = { screen = "login" }, modifier = Modifier.fillMaxWidth()) { Text("Log in") }
-            TextButton(onClick = { if (state.profile.skills.isNotBlank()) state.enter() else screen = "onboarding" }, modifier = Modifier.fillMaxWidth()) { Text("Continue on this device") }
+            TextButton(onClick = { if (state.profile.skills.isNotBlank()) state.enter() else screen = "onboarding" }, modifier = Modifier.fillMaxWidth()) { Text("Continue as guest") }
         }
         "intro" -> {
             val titles=listOf("Know where you stand","Gaps, not verdicts","One step at a time")
@@ -123,7 +123,7 @@ import androidx.compose.ui.unit.dp
                     Field("Education / programme",state.profile.education) { state.update(state.profile.copy(education=it)) }
                     Field("Location",state.profile.location) { state.update(state.profile.copy(location=it)) }
                 }
-                1 -> { Heading("What can you do today?", "Choose skills you can demonstrate. You can change these later.")
+                1 -> { Heading("What can you do today?", "Enter skills from your programme, projects or work. You can also select any suggestions that fit.")
                     SkillSelector(state)
                 }
                 else -> { Heading("What are you aiming for?", "We’ll keep your goal in view as you explore.")
@@ -134,6 +134,7 @@ import androidx.compose.ui.unit.dp
                 }
             }
             Button(onClick = { if (onboarding < 2) onboarding++ else state.enter() }, enabled = onboarding != 0 || state.profile.name.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text(if (onboarding == 2) "See my matches" else "Continue") }
+            if (state.userId != null) TextButton(onClick = { state.leave(); screen = "welcome" }) { Text("Sign out") }
             TextButton(onClick = { if (onboarding > 0) onboarding-- else screen = "welcome" }) { Text("← Back") }
         }
     }
@@ -142,18 +143,20 @@ import androidx.compose.ui.unit.dp
     var name by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var confirmation by remember { mutableStateOf("") }
     var reveal by remember { mutableStateOf(false) }
     var feedback by remember { mutableStateOf("") }
     var request by remember { mutableStateOf(false) }
     var googleRequest by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    LaunchedEffect(mode) { feedback = ""; password = ""; reveal = false }
+    LaunchedEffect(mode) { feedback = ""; password = ""; confirmation = ""; reveal = false }
     LaunchedEffect(request) {
         if (request) {
             try {
                 when (val result = if (googleRequest) gateway.signInWithGoogle(context) else when (mode) { "signup" -> gateway.signUp(name,email,password); "reset" -> gateway.resetPassword(email); else -> gateway.signIn(email,password) }) {
                     AccountResult.Success -> {
                         password = ""
+                        confirmation = ""
                         if (!authenticated(if (mode == "signup" && !googleRequest) name else "")) feedback = "Signed in, but your data could not load. Check your connection and retry."
                     }
                     AccountResult.Cancelled -> feedback = ""
@@ -172,21 +175,32 @@ import androidx.compose.ui.unit.dp
         if (mode == "signup") Field("Full name",name) { name=it }
         OutlinedTextField(email,{ email=it; feedback="" }, label={Text("Email address")},singleLine=true,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Email),modifier=Modifier.fillMaxWidth())
         if (mode != "reset") OutlinedTextField(password,{password=it; feedback=""},label={Text("Password")},singleLine=true,visualTransformation=if(reveal) VisualTransformation.None else PasswordVisualTransformation(),trailingIcon={TextButton(onClick={reveal=!reveal}){Text(if(reveal) "Hide" else "Show")}},keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Password),modifier=Modifier.fillMaxWidth())
-        if(mode=="signup") Text("Use at least 8 characters. Firebase securely manages your password.",style=MaterialTheme.typography.bodySmall,color=Muted)
+        if (mode == "signup") {
+            OutlinedTextField(
+                value = confirmation,
+                onValueChange = { confirmation = it; feedback = "" },
+                label = { Text("Confirm password") },
+                singleLine = true,
+                visualTransformation = if (reveal) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Text("Use at least $MIN_SIGN_UP_PASSWORD_LENGTH characters. You can use a passphrase.", style = MaterialTheme.typography.bodySmall, color = Muted)
+        }
         if(feedback.isNotBlank()) InfoCard("Before you continue",feedback,CoralSoft,OrangeInk)
         Button(enabled=!request,onClick={
             feedback=when {
                 mode=="signup" && name.isBlank() -> "Enter your name."
                 !android.util.Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches() -> "Enter a valid email address."
-                mode!="reset" && password.isBlank() -> "Enter your password."
-                mode=="signup" && password.length<8 -> "Choose a password with at least 8 characters."
+                mode=="signup" -> signUpPasswordError(password, confirmation).orEmpty()
+                mode=="login" && password.isBlank() -> "Enter your password."
                 else -> ""
             }
             if(feedback.isEmpty()) { googleRequest=false; request=true }
         },modifier=Modifier.fillMaxWidth()) { Text(if(request) "Please wait…" else when(mode){"signup"->"Create account";"reset"->"Send reset link";else->"Log in"}) }
         if(mode != "reset") {
             Text("or",style=MaterialTheme.typography.bodySmall,color=Muted)
-            OutlinedButton(enabled=!request,onClick={feedback="";password="";googleRequest=true;request=true},modifier=Modifier.fillMaxWidth()) {
+            OutlinedButton(enabled=!request,onClick={feedback="";password="";confirmation="";googleRequest=true;request=true},modifier=Modifier.fillMaxWidth()) {
                 Text(if(request && googleRequest) "Connecting to Google..." else "Continue with Google")
             }
         }
@@ -194,7 +208,7 @@ import androidx.compose.ui.unit.dp
         TextButton(enabled=!request,onClick={navigate(if(mode=="signup") "login" else "signup")}){Text(if(mode=="signup") "Already have an account? Log in" else "New here? Create an account")}
         if(!recruiter) {
             HorizontalDivider(color=Line)
-            TextButton(enabled=!request,onClick={local(name,email)},modifier=Modifier.fillMaxWidth()){Text("Continue on this device")}
+            TextButton(enabled=!request,onClick={local(name,email)},modifier=Modifier.fillMaxWidth()){Text("Continue as guest")}
         }
     }
 }
