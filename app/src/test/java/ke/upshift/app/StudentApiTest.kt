@@ -51,12 +51,12 @@ class StudentApiTest {
         )
         assertEquals(listOf(false, true), refreshes)
         assertEquals(listOf("old", "fresh"), tokens)
-        assertEquals(AiProblem.SIGN_IN, assertThrows(AiFailure::class.java) { requireAiSuccess(result) }.problem)
+        assertEquals(AiProblem.TOKEN_REJECTED, assertThrows(AiFailure::class.java) { requireAiSuccess(result) }.problem)
     }
 
     @Test fun successAndRoutineErrorsAreHandledSeparately() {
         assertEquals("result", requireAiSuccess(AiHttpResult(200, "result")))
-        mapOf(422 to AiProblem.INVALID_INPUT, 503 to AiProblem.SERVICE, 504 to AiProblem.TIMEOUT)
+        mapOf(403 to AiProblem.ACCESS_DENIED, 422 to AiProblem.INVALID_INPUT, 503 to AiProblem.SERVICE, 504 to AiProblem.TIMEOUT)
             .forEach { (status, problem) ->
                 assertEquals(problem, assertThrows(AiFailure::class.java) {
                     requireAiSuccess(AiHttpResult(status, ""))

@@ -44,7 +44,7 @@ internal fun RecommendationsScreen(state: AppState, editProfile: () -> Unit, sig
     AiPage("Job recommendations", "Find active vacancies using the skills and experience in your profile.", back) {
         when {
             state.userId == null -> {
-                Text("Sign in to find recommendations for your student profile.")
+                Text("You're browsing as a guest. Sign in to find recommendations for your student profile.")
                 Button(onClick = signIn) { Text("Sign in") }
             }
             !ready -> {
@@ -216,7 +216,9 @@ private fun SkillList(title: String, values: List<String>, empty: String = "") {
 private fun FailureMessage(failure: AiFailure, feature: String, signIn: () -> Unit, edit: (() -> Unit)? = null) {
     Text(when (failure.problem) {
         AiProblem.CONFIGURATION -> "The backend address is missing or invalid. Check the app’s API configuration."
-        AiProblem.SIGN_IN -> "Your sign-in session expired. Sign in again to continue."
+        AiProblem.SIGN_IN -> "Your sign-in session ended. Sign in again to continue."
+        AiProblem.TOKEN_REJECTED -> "The backend couldn't verify your sign-in. Retry or sign in again. If this keeps happening, ask the team to check that the app and backend use the same Firebase project."
+        AiProblem.ACCESS_DENIED -> "This account doesn't have access to $feature. Contact the UpShift team."
         AiProblem.INVALID_INPUT -> if (edit != null) "Check your profile and filters, then try again." else "Check your feedback and try again."
         AiProblem.RATE_LIMIT -> "Too many requests. Wait for the retry button to become available."
         AiProblem.TIMEOUT -> "The server took too long. Try again."
@@ -224,7 +226,9 @@ private fun FailureMessage(failure: AiFailure, feature: String, signIn: () -> Un
         AiProblem.SERVICE -> "The $feature service is temporarily unavailable. Try again later."
         AiProblem.RESPONSE -> "The server sent an unexpected response. Try again."
     }, color = MaterialTheme.colorScheme.error)
-    if (failure.problem == AiProblem.SIGN_IN) TextButton(onClick = signIn) { Text("Sign in again") }
+    if (failure.problem in setOf(AiProblem.SIGN_IN, AiProblem.TOKEN_REJECTED)) {
+        TextButton(onClick = signIn) { Text("Sign in again") }
+    }
     if (failure.problem == AiProblem.INVALID_INPUT && edit != null) TextButton(onClick = edit) { Text("Edit profile") }
 }
 

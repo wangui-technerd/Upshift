@@ -15,7 +15,7 @@ import java.net.HttpURLConnection
 import java.net.SocketTimeoutException
 import java.net.URI
 
-internal enum class AiProblem { CONFIGURATION, SIGN_IN, INVALID_INPUT, RATE_LIMIT, TIMEOUT, NETWORK, SERVICE, RESPONSE }
+internal enum class AiProblem { CONFIGURATION, SIGN_IN, TOKEN_REJECTED, ACCESS_DENIED, INVALID_INPUT, RATE_LIMIT, TIMEOUT, NETWORK, SERVICE, RESPONSE }
 
 internal class AiFailure(val problem: AiProblem, val retryAfterSeconds: Long = 0) : Exception()
 
@@ -73,7 +73,8 @@ internal suspend fun authorizedAiRequest(
 
 internal fun requireAiSuccess(result: AiHttpResult): String = when (result.status) {
     in 200..299 -> result.body
-    401, 403 -> throw AiFailure(AiProblem.SIGN_IN)
+    401 -> throw AiFailure(AiProblem.TOKEN_REJECTED)
+    403 -> throw AiFailure(AiProblem.ACCESS_DENIED)
     400, 422 -> throw AiFailure(AiProblem.INVALID_INPUT)
     408, 504 -> throw AiFailure(AiProblem.TIMEOUT)
     429 -> throw AiFailure(AiProblem.RATE_LIMIT, result.retryAfter?.toLongOrNull()?.coerceAtLeast(0) ?: 60)
@@ -160,8 +161,11 @@ internal class AiClient(private val backend: FirebaseBackend) {
             throw e
         } catch (_: FirebaseNetworkException) {
             throw AiFailure(AiProblem.NETWORK)
-        } catch (_: FirebaseAuthException) {
-            throw AiFailure(AiProblem.SIGN_IN)
+        } catch (e: FirebaseAuthException) {
+            val invalidSession = e.errorCode in setOf(
+                "ERROR_USER_TOKEN_EXPIRED", "ERROR_INVALID_USER_TOKEN", "ERROR_USER_DISABLED", "ERROR_USER_NOT_FOUND",
+            )
+            throw AiFailure(if (invalidSession || backend.uid == null) AiProblem.SIGN_IN else AiProblem.SERVICE)
         } catch (_: SocketTimeoutException) {
             throw AiFailure(AiProblem.TIMEOUT)
         } catch (_: IOException) {

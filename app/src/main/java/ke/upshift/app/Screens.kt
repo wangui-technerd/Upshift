@@ -192,7 +192,7 @@ import androidx.compose.ui.platform.LocalUriHandler
         }
     }
 }
-@Composable fun YouScreen(state:AppState,edit:()->Unit,cv:()->Unit,growth:()->Unit,saved:()->Unit) {
+@Composable fun YouScreen(state:AppState,edit:()->Unit,cv:()->Unit,growth:()->Unit,saved:()->Unit,accountAction:()->Unit) {
     val scores=state.roles.mapNotNull{state.score(it)}
     val average=if(scores.isEmpty())null else scores.average().toInt()
     val initials=state.profile.name.split(" ").filter{it.isNotBlank()}.take(2).joinToString(""){it.first().uppercase()}.ifBlank{"U"}
@@ -201,6 +201,11 @@ import androidx.compose.ui.platform.LocalUriHandler
             Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(14.dp)) {
                 Box(Modifier.size(64.dp).clip(CircleShape).background(Brush.linearGradient(listOf(Coral,Brand))),contentAlignment=Alignment.Center){Text(initials,style=MaterialTheme.typography.titleLarge,color=Color.White)}
                 Column(Modifier.weight(1f)){Text(state.profile.name.ifBlank{"Your profile"},style=MaterialTheme.typography.headlineSmall);Text(state.profile.education.ifBlank{"Add your education"},style=MaterialTheme.typography.bodySmall,color=Muted);Text(state.profile.location.ifBlank{"Kenya"},style=MaterialTheme.typography.bodySmall,color=Muted)}
+            }
+        }
+        item {
+            OutlinedButton(onClick = accountAction, modifier = Modifier.fillMaxWidth()) {
+                Text(if (state.userId != null) "Sign out" else "Sign in")
             }
         }
         item{

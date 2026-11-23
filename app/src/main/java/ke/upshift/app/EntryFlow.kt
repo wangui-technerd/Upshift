@@ -12,8 +12,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 
-@Composable fun EntryFlow(state: AppState, recruiter: () -> Unit = {}) {
-    var screen by rememberSaveable { mutableStateOf(if (state.userId != null && state.cloudReady) "onboarding" else "welcome") }
+@Composable fun EntryFlow(state: AppState, initialScreen: String, recruiter: () -> Unit = {}) {
+    var screen by rememberSaveable { mutableStateOf(if (state.userId != null && state.cloudReady) "onboarding" else initialScreen) }
     var intro by rememberSaveable { mutableIntStateOf(0) }
     var onboarding by rememberSaveable { mutableIntStateOf(0) }
     LaunchedEffect(state.cloudReady) { if(state.cloudReady && state.userId != null) screen = "onboarding" }
@@ -47,7 +47,7 @@ import androidx.compose.ui.unit.dp
             InfoCard("A little progress goes a long way", "Discover suitable roles, build a practical growth path and create your CV.", CoralSoft, OrangeInk)
             Button(onClick = { screen = "intro" }, modifier = Modifier.fillMaxWidth()) { Text("Get started") }
             OutlinedButton(onClick = { screen = "login" }, modifier = Modifier.fillMaxWidth()) { Text("Log in") }
-            TextButton(onClick = { if (state.profile.skills.isNotBlank()) state.enter() else screen = "onboarding" }, modifier = Modifier.fillMaxWidth()) { Text("Continue on this device") }
+            TextButton(onClick = { if (state.profile.skills.isNotBlank()) state.enter() else screen = "onboarding" }, modifier = Modifier.fillMaxWidth()) { Text("Continue as guest") }
         }
         "intro" -> {
             val titles=listOf("Know where you stand","Gaps, not verdicts","One step at a time")
@@ -134,6 +134,7 @@ import androidx.compose.ui.unit.dp
                 }
             }
             Button(onClick = { if (onboarding < 2) onboarding++ else state.enter() }, enabled = onboarding != 0 || state.profile.name.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text(if (onboarding == 2) "See my matches" else "Continue") }
+            if (state.userId != null) TextButton(onClick = { state.leave(); screen = "welcome" }) { Text("Sign out") }
             TextButton(onClick = { if (onboarding > 0) onboarding-- else screen = "welcome" }) { Text("← Back") }
         }
     }
@@ -194,7 +195,7 @@ import androidx.compose.ui.unit.dp
         TextButton(enabled=!request,onClick={navigate(if(mode=="signup") "login" else "signup")}){Text(if(mode=="signup") "Already have an account? Log in" else "New here? Create an account")}
         if(!recruiter) {
             HorizontalDivider(color=Line)
-            TextButton(enabled=!request,onClick={local(name,email)},modifier=Modifier.fillMaxWidth()){Text("Continue on this device")}
+            TextButton(enabled=!request,onClick={local(name,email)},modifier=Modifier.fillMaxWidth()){Text("Continue as guest")}
         }
     }
 }
