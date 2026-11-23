@@ -6,7 +6,9 @@ val firebaseEmulatorHost = providers.gradleProperty("firebaseEmulatorHost").orEl
 require(firebaseEmulatorHost in setOf("10.0.2.2", "127.0.0.1")) {
     "firebaseEmulatorHost must be 10.0.2.2 for Android Emulator or 127.0.0.1 for USB reverse."
 }
-val aiBaseUrl = providers.gradleProperty("aiBaseUrl").orNull
+val aiBaseUrl = providers.gradleProperty("aiBaseUrl").orNull?.takeIf { it.isNotBlank() }
+val vacancyBaseUrl = providers.gradleProperty("vacancyBaseUrl").orNull?.takeIf { it.isNotBlank() } ?: aiBaseUrl
+val localDemoBaseUrl = "http://$firebaseEmulatorHost:8122"
 layout.buildDirectory.set(file("${System.getProperty("java.io.tmpdir")}/upshift-build/${rootProject.projectDir.absolutePath.hashCode()}/app"))
 android {
     namespace = "ke.upshift.app"
@@ -16,14 +18,17 @@ android {
         buildConfigField("boolean", "FIREBASE_EMULATORS", "false")
         buildConfigField("String", "FIREBASE_EMULATOR_HOST", "\"10.0.2.2\"")
         buildConfigField("String", "AI_BASE_URL", "\"${aiBaseUrl.orEmpty()}\"")
-        buildConfigField("String", "VACANCY_BASE_URL", "\"${providers.gradleProperty("vacancyBaseUrl").orNull ?: providers.gradleProperty("aiBaseUrl").orNull ?: ""}\"")
+        buildConfigField("String", "VACANCY_BASE_URL", "\"${vacancyBaseUrl.orEmpty()}\"")
     }
     buildTypes {
         getByName("debug") {
             buildConfigField("boolean", "FIREBASE_EMULATORS", firebaseEmulators.toString())
             buildConfigField("String", "FIREBASE_EMULATOR_HOST", "\"$firebaseEmulatorHost\"")
-            if (firebaseEmulators && aiBaseUrl.isNullOrBlank()) {
-                buildConfigField("String", "AI_BASE_URL", "\"http://$firebaseEmulatorHost:8122\"")
+            if (firebaseEmulators && aiBaseUrl == null) {
+                buildConfigField("String", "AI_BASE_URL", "\"$localDemoBaseUrl\"")
+            }
+            if (firebaseEmulators && vacancyBaseUrl == null) {
+                buildConfigField("String", "VACANCY_BASE_URL", "\"$localDemoBaseUrl\"")
             }
         }
         getByName("release") {

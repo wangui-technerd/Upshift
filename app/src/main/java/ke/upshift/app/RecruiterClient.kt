@@ -41,7 +41,7 @@ fun recruiterPayload(draft:Map<String,String>):JSONObject {
 class RecruiterClient(private val backend:FirebaseBackend) {
     private suspend fun request(path:String,method:String="GET",body:JSONObject?=null):JSONObject {
         val base=BuildConfig.VACANCY_BASE_URL.trimEnd('/')
-        require(base.isNotBlank()) { "Company service is not configured. Set vacancyBaseUrl in your local Gradle configuration." }
+        require(base.isNotBlank()) { "Company Workspace is unavailable in this build. Ask the UpShift team for a build connected to the backend." }
         val url=URL("$base/listings$path")
         require(url.protocol=="https" || (BuildConfig.DEBUG && url.protocol=="http" && url.host in listOf("10.0.2.2","127.0.0.1","localhost"))) { "Use HTTPS for the company service." }
         val token=backend.idToken()

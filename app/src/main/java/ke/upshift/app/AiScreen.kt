@@ -128,7 +128,7 @@ internal fun FeedbackScreen(state: AppState, signIn: () -> Unit, back: () -> Uni
     val client = remember(state.backend) { AiClient(state.backend) }
     val retry = rememberAiRetry()
 
-    AiPage("App feedback", "Tell us what worked and what you’d improve.", back) {
+    AiPage("App feedback", "See the sentiment UpShift detects in your feedback.", back) {
         if (state.userId == null) {
             Text("Sign in to submit feedback for analysis.")
             Button(onClick = signIn) { Text("Sign in") }
@@ -215,7 +215,7 @@ private fun SkillList(title: String, values: List<String>, empty: String = "") {
 @Composable
 private fun FailureMessage(failure: AiFailure, feature: String, signIn: () -> Unit, edit: (() -> Unit)? = null) {
     Text(when (failure.problem) {
-        AiProblem.CONFIGURATION -> "The backend address is missing or invalid. Check the app’s API configuration."
+        AiProblem.CONFIGURATION -> "This feature needs a build connected to the UpShift backend."
         AiProblem.SIGN_IN -> "Your sign-in session ended. Sign in again to continue."
         AiProblem.TOKEN_REJECTED -> "The backend couldn't verify your sign-in. Retry or sign in again. If this keeps happening, ask the team to check that the app and backend use the same Firebase project."
         AiProblem.ACCESS_DENIED -> "This account doesn't have access to $feature. Contact the UpShift team."

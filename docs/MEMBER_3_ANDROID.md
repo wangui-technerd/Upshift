@@ -5,7 +5,14 @@ The Android app sends the signed-in Firebase user's ID token to
 recommendations** and **menu → Feedback**. The recommendation request sends
 education, skills, summary, projects, work experience and goal. Location and
 months of experience are optional. Enter zero only for a student with no
-experience. Keep the phone and email fields out of recommendation text.
+experience. Keep the phone and email fields out of recommendation text. Education is
+free text and users can enter their own skills. Include non-computing profiles
+and approved vacancies when checking coverage across programmes.
+
+Email sign-up checks for a 12-character minimum and matching passwords in the
+app. Set the same minimum in Firebase Authentication's password policy in
+Require mode to enforce it on the server. Check the existing-account sign-in
+and password reset flows before changing the shared project policy.
 
 ## Use the team backend
 
@@ -79,6 +86,11 @@ project and the matching service:
 ```
 
 The same HTTPS URL can be set via `aiBaseUrl` in user Gradle properties.
+Company Workspace uses this URL by default. Set `vacancyBaseUrl` only when
+the listings service runs at a separate address. In the local demo, both
+default to port 8122 on the configured emulator host.
+The Feedback screen calls the backend for sentiment analysis and displays the
+label. Sending a message to the team would require a separate submission flow.
 Use only a team-controlled backend. The local demo URL cannot be shared as a
 staging endpoint.
 
