@@ -1,0 +1,8 @@
+**
+!Dockerfile
+!backend/
+!backend/*.py
+!backend/requirements.txt
+!backend/requirements-model.txt
+!upshift_ai/
+!upshift_ai/*.py

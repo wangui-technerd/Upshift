@@ -58,7 +58,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
             }
             Surface(color=Paper) {
                 Column(Modifier.fillMaxWidth().padding(horizontal=24.dp,vertical=12.dp)) {
-                    Button(onClick={if(notes.trim().length<10)error="Add a short reflection (at least 10 characters)." else {state.recordStep(step.skill,notes);dismiss()}},modifier=Modifier.fillMaxWidth()){Text(if(step.skill in state.completed)"Save updated evidence" else "Mark practice complete")}
+                    Button(onClick={if(notes.trim().length !in 20..2000)error="Add a reflection of 20 to 2000 characters." else {state.recordStep(step.skill,notes);dismiss()}},modifier=Modifier.fillMaxWidth()){Text(if(step.skill in state.completed)"Save updated evidence" else "Mark practice complete")}
                     TextButton(onClick=dismiss,modifier=Modifier.fillMaxWidth()){Text("Close")}
                 }
             }

@@ -1,6 +1,9 @@
 package ke.upshift.app
 
 import android.os.Bundle
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModelProvider
 import android.view.*
 import androidx.fragment.app.*
 import androidx.compose.ui.platform.*
@@ -15,12 +18,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 
+class UpShiftViewModel(application: Application) : AndroidViewModel(application) {
+    val state = AppState(application)
+    override fun onCleared() { state.close() }
+}
 class MainActivity : FragmentActivity() {
     lateinit var state: AppState
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
-        state = AppState(applicationContext)
+        state = ViewModelProvider(this)[UpShiftViewModel::class.java].state
         val host = FragmentContainerView(this).apply { id = R.id.main_fragment_host }
         setContentView(host)
         if (savedInstanceState == null) supportFragmentManager.beginTransaction().replace(R.id.main_fragment_host, AppFragment()).commit()
@@ -52,7 +59,11 @@ class AppFragment : Fragment() {
     }
     UpshiftTheme {
         Box(Modifier.fillMaxSize()) {
-            if (!state.entered) Surface(color=Paper,modifier=Modifier.fillMaxSize()) { EntryFlow(state) }
+            if (state.restoring) Surface(color=Paper,modifier=Modifier.fillMaxSize()) {
+                Column(Modifier.fillMaxSize(),verticalArrangement=Arrangement.Center,horizontalAlignment=Alignment.CenterHorizontally) {
+                    CircularProgressIndicator(); Text("Loading your account")
+                }
+            } else if (!state.entered) Surface(color=Paper,modifier=Modifier.fillMaxSize()) { EntryFlow(state) }
             else Scaffold(
                 topBar = {
                     Surface(color=Paper) {
@@ -63,8 +74,9 @@ class AppFragment : Fragment() {
                                 DropdownMenu(expanded=menu,onDismissRequest={menu=false}) {
                                     DropdownMenuItem(text={Text("Saved roles")},onClick={page="saved";detail=null;menu=false})
                                     DropdownMenuItem(text={Text("Edit profile")},onClick={page="edit";detail=null;menu=false})
+                                    if(state.userId != null) DropdownMenuItem(text={Text("AI tools")},onClick={page="ai";detail=null;menu=false})
                                     DropdownMenuItem(text={Text("About Upshift")},onClick={about=true;menu=false})
-                                    DropdownMenuItem(text={Text("Return to welcome")},onClick={menu=false;page="";detail=null;tab="Matches";state.leave()})
+                                    DropdownMenuItem(text={Text(if(state.userId != null) "Sign out" else "Return to welcome")},onClick={menu=false;page="";detail=null;tab="Matches";coach=false;practice=null;preview=false;state.leave()})
                                 }
                             }
                         }
@@ -77,9 +89,15 @@ class AppFragment : Fragment() {
                 },
                 floatingActionButton={ if(page.isEmpty()) CoachLauncher { coach=true } }
             ) { padding ->
-                Box(Modifier.fillMaxSize().padding(padding).imePadding()) {
+                Column(Modifier.fillMaxSize().padding(padding).imePadding()) {
+                    if (state.userId != null) {
+                        Text(if(state.syncMessage.isNotBlank()) state.syncMessage else if(state.saving) "Saving to your account..." else "Signed in as ${state.profile.email}", modifier=Modifier.padding(horizontal=20.dp,vertical=6.dp),style=MaterialTheme.typography.bodySmall)
+                        if(state.syncMessage.isNotBlank()) TextButton(onClick={state.retrySync()}){Text("Retry cloud save")}
+                    } else Text("Guest preview - sample opportunities",modifier=Modifier.padding(horizontal=20.dp,vertical=6.dp),style=MaterialTheme.typography.bodySmall)
+                    Box(Modifier.weight(1f)) {
                     screenStates.SaveableStateProvider(if(page.isNotEmpty()) "page/$page" else detail?.let { "role/$it" } ?: "tab/$tab") {
                     when {
+                        page=="ai" -> AiScreen(state){page=""}
                         page=="cv" -> CvScreen(state,preview,{preview=it},{page=""})
                         page=="edit" -> EditProfileScreen(state){page=""}
                         page=="saved" -> SavedRolesScreen(state,{page=""},{detail=it;page=""})
@@ -89,11 +107,12 @@ class AppFragment : Fragment() {
                         else -> MatchesScreen(state,{detail=it},{page="edit"})
                     }
                     }
+                    }
                 }
             }
         }
         if(coach && state.entered) CoachSheet(state,role){coach=false}
         practice?.let { skill -> LearningLibrary.find { it.skill==skill }?.let { step -> PracticeSheet(state,step){practice=null} } }
-        if(about) AlertDialog(onDismissRequest={about=false},title={Text("Your career copilot")},text={Text("Discover opportunities, understand your skill gaps and take one practical step at a time. Your profile and learning drafts stay on this device until you connect an account.")},confirmButton={TextButton(onClick={about=false}){Text("Got it")}})
+        if(about) AlertDialog(onDismissRequest={about=false},title={Text("Your career copilot")},text={Text("Discover opportunities, understand your skill gaps and take one practical step at a time. Guest drafts stay on this device. Signed-in profiles and learning progress are saved to your Firebase account.")},confirmButton={TextButton(onClick={about=false}){Text("Got it")}})
     }
 }

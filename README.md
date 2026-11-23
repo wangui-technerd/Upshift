@@ -18,12 +18,17 @@ The main AI notebook is [UpShift_Clear_Steps.ipynb](ai/notebooks/UpShift_Clear_S
 
 ## Android frontend
 
+Backend development now lives in [`backend/`](backend/README.md), with its
+implemented endpoint contract in [`docs/BACKEND_API.md`](docs/BACKEND_API.md).
+Accounts and application data now use Firebase; Python serves optional AI inference and moderated company/vacancy management.
+Email/password and Google sign-in setup: [docs/GOOGLE_SIGN_IN.md](docs/GOOGLE_SIGN_IN.md).
+
 Open this folder in Android Studio, sync Gradle and run `app` (Android 8/API 26+, compile SDK 37). Android Studio's bundled JBR is supported. Build output is under the system temporary directory in `upshift-build/<workspace-hash>/app` to avoid recurring Windows locks in the synced workspace. The recommended optimized APK is `output/apk/Upshift-preview.apk`. Select the preview build variant for performance checks.
 
 ## Complete frontend journey
 
 - Branded splash → welcome → three short introduction screens.
-- Sign-up, login and password-reset forms with validation. Account services are an injectable boundary and are not connected; forms never invent a successful account or retain passwords. Continue on this device provides a working local journey.
+- Email/password sign-up, login, password reset and Continue with Google use Firebase Authentication. Continue on this device retains a separate guest journey. Google provider/OAuth setup is required before live Google sign-in.
 - Profile onboarding: student information → skills → placement goal.
 - Matches: percentage rings, descending percentage ranking, search, saved filter and actual learning streak.
 - Role details: responsibilities, requirements, eligibility, current skills, missing skills, save, target growth path and CV preparation.
@@ -34,11 +39,11 @@ Open this folder in Android Studio, sync Gradle and run `app` (Android 8/API 26+
 
 ## Data and integration
 
-All employer listings are fictional fixtures, retained in the development repository. Product screens do not contain developer-status banners. Replace `OpportunitiesRepository`, `MatchScorer`, `CoachRepository` and `AccountGateway` with agreed backend/model adapters. See `docs/INTEGRATION.md`.
+Bundled opportunities are sourced research records with explicit eligibility and availability caveats; they are not a guarantee of active vacancies. See `data/listings/README.md`. Published Firestore opportunities supplement the bundled catalogue. Company registration, vacancy moderation and selected-source collection are described in `docs/VACANCY_BACKEND.md`.
 
 The temporary match formula is the percentage of listed required skills present in the user's entered profile (case-insensitive exact matching), not a hiring probability. An empty profile has no invented percentage. Skills are not added automatically when an activity is completed. Learning activity earns 25 XP per completed skill; levels advance each 150 XP. Streaks use consecutive activity days in Africa/Nairobi and remain active through the day after the last activity.
 
-Profile drafts, saved roles, target role, evidence and progress persist locally. Passwords do not persist. Existing profiles are retained by app updates. Cloud auth/sync, real applications and trained model outputs require the other teammates' integrations.
+Profile drafts, saved roles, target role, evidence and progress persist locally. Passwords do not persist. Existing profiles are retained by app updates. Signed-in profiles and progress sync through Firebase. External applications open the official source. Trained model outputs require the trusted notebook artifact.
 
 ## Course components
 

@@ -30,3 +30,22 @@ ai/upshift_ai_handoff.zip
 ai/student_review/*_pack.zip
 __pycache__/
 .pytest_cache/
+# Backend runtime, credentials and trained research artifacts
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+backend/data/
+backend/artifacts/
+*.joblib
+.env
+.env.*
+!.env.example
+/.gradle-local/
+/app/google-services.json
+**/*service-account*.json
+**/*adminsdk*.json
+*-debug.log
+/firebase-tests/node_modules/
+
+/.firebase-config/
+/.firebase-emulators/
