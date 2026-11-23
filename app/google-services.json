@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "370737373343",
+    "project_id": "upshift-a3dbd",
+    "storage_bucket": "upshift-a3dbd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:370737373343:android:b7cafa3297af064a6242aa",
+        "android_client_info": {
+          "package_name": "ke.upshift.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "370737373343-0g2p2ppl2fkbg1932po97bnbu3m2prep.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ke.upshift.app",
+            "certificate_hash": "261429e35f537999eaa2ceba454c708cc7a61b28"
+          }
+        },
+        {
+          "client_id": "370737373343-3e78qof07gn49pjejp67cot0iicu90a7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAX_mpyMMUjH3T1I_vRYT_YvZKEuH19AyE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "370737373343-3e78qof07gn49pjejp67cot0iicu90a7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
