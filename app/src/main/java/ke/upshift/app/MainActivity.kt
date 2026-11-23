@@ -17,6 +17,7 @@ import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 
 class UpShiftViewModel(application: Application) : AndroidViewModel(application) {
     val state = AppState(application)
@@ -44,6 +45,11 @@ class AppFragment : Fragment() {
 }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable fun Upshift(state: AppState) {
+    val workspaceContext=LocalContext.current
+    val workspacePrefs=remember { workspaceContext.getSharedPreferences("upshift-workspace",android.content.Context.MODE_PRIVATE) }
+    var recruiterMode by rememberSaveable { mutableStateOf(workspacePrefs.getString("last","student")=="recruiter") }
+    val workspaceScope=rememberCoroutineScope()
+    fun openRecruiter() { recruiterMode=true;workspacePrefs.edit().putString("last","recruiter").apply() }
     var tab by rememberSaveable { mutableStateOf("Matches") }
     var detail by rememberSaveable { mutableStateOf<String?>(null) }
     var page by rememberSaveable { mutableStateOf("") }
@@ -54,16 +60,32 @@ class AppFragment : Fragment() {
     var practice by rememberSaveable { mutableStateOf<String?>(null) }
     val role = state.roles.find { it.id == detail }
     val screenStates = rememberSaveableStateHolder()
+    var entryScreen by rememberSaveable { mutableStateOf("welcome") }
+    val leaveStudentWorkspace: (String) -> Unit = { destination ->
+        entryScreen = destination
+        menu = false
+        coach = false
+        practice = null
+        preview = false
+        screenStates.removeState("page/feedback")
+        page = ""
+        detail = null
+        tab = "Matches"
+        state.leave()
+    }
+    val signIn = { leaveStudentWorkspace("login") }
+    val signOut = { leaveStudentWorkspace("welcome") }
     androidx.activity.compose.BackHandler(enabled = state.entered && (coach || practice != null || detail != null || page.isNotEmpty() || tab != "Matches")) {
-        when { coach -> coach = false; practice != null -> practice = null; preview -> preview = false; page.isNotEmpty() -> page = ""; detail != null -> detail = null; else -> tab = "Matches" }
+        when { coach -> coach = false; practice != null -> practice = null; preview -> preview = false; page == "edit-recommendations" -> page = "recommendations"; page.isNotEmpty() -> page = ""; detail != null -> detail = null; else -> tab = "Matches" }
     }
     UpshiftTheme {
         Box(Modifier.fillMaxSize()) {
-            if (state.restoring) Surface(color=Paper,modifier=Modifier.fillMaxSize()) {
+            if(recruiterMode) RecruiterWorkspace(state) { workspaceScope.launch { if(state.backend.uid!=null)state.connectAccount();recruiterMode=false;workspacePrefs.edit().putString("last","student").apply() } }
+            else if (state.restoring) Surface(color=Paper,modifier=Modifier.fillMaxSize()) {
                 Column(Modifier.fillMaxSize(),verticalArrangement=Arrangement.Center,horizontalAlignment=Alignment.CenterHorizontally) {
                     CircularProgressIndicator(); Text("Loading your account")
                 }
-            } else if (!state.entered) Surface(color=Paper,modifier=Modifier.fillMaxSize()) { EntryFlow(state) }
+            } else if (!state.entered) Surface(color=Paper,modifier=Modifier.fillMaxSize()) { EntryFlow(state, initialScreen = entryScreen, recruiter = { openRecruiter() }) }
             else Scaffold(
                 topBar = {
                     Surface(color=Paper) {
@@ -72,11 +94,15 @@ class AppFragment : Fragment() {
                             Box {
                                 IconButton(onClick={menu=true}) { Icon(painterResource(R.drawable.ic_menu),contentDescription="Open menu",tint=BrandDeep) }
                                 DropdownMenu(expanded=menu,onDismissRequest={menu=false}) {
+                                    DropdownMenuItem(text={Text("Company workspace")},onClick={menu=false;openRecruiter()})
                                     DropdownMenuItem(text={Text("Saved roles")},onClick={page="saved";detail=null;menu=false})
                                     DropdownMenuItem(text={Text("Edit profile")},onClick={page="edit";detail=null;menu=false})
-                                    if(state.userId != null) DropdownMenuItem(text={Text("AI tools")},onClick={page="ai";detail=null;menu=false})
+                                    DropdownMenuItem(text={Text("Feedback")},onClick={page="feedback";detail=null;menu=false})
                                     DropdownMenuItem(text={Text("About Upshift")},onClick={about=true;menu=false})
-                                    DropdownMenuItem(text={Text(if(state.userId != null) "Sign out" else "Return to welcome")},onClick={menu=false;page="";detail=null;tab="Matches";coach=false;practice=null;preview=false;state.leave()})
+                                    DropdownMenuItem(
+                                        text = { Text(if (state.userId != null) "Sign out" else "Sign in") },
+                                        onClick = if (state.userId != null) signOut else signIn,
+                                    )
                                 }
                             }
                         }
@@ -97,14 +123,20 @@ class AppFragment : Fragment() {
                     Box(Modifier.weight(1f)) {
                     screenStates.SaveableStateProvider(if(page.isNotEmpty()) "page/$page" else detail?.let { "role/$it" } ?: "tab/$tab") {
                     when {
-                        page=="ai" -> AiScreen(state){page=""}
+                        page=="recommendations" -> key(state.userId) {
+                            RecommendationsScreen(state, { page = "edit-recommendations" }, signIn) { page = "" }
+                        }
+                        page=="edit-recommendations" -> EditProfileScreen(state) { page = "recommendations" }
+                        page=="feedback" -> key(state.userId) {
+                            FeedbackScreen(state, signIn) { page = "" }
+                        }
                         page=="cv" -> CvScreen(state,preview,{preview=it},{page=""})
                         page=="edit" -> EditProfileScreen(state){page=""}
                         page=="saved" -> SavedRolesScreen(state,{page=""},{detail=it;page=""})
                         role!=null -> RoleScreen(state,role,{detail=null},{state.target(role);detail=null;tab="Growth"},{page="cv"},{coach=true})
                         tab=="Growth" -> GrowthScreen(state,{detail=it},{practice=it})
-                        tab=="You" -> YouScreen(state,{page="edit"},{page="cv"},{tab="Growth"},{page="saved"})
-                        else -> MatchesScreen(state,{detail=it},{page="edit"})
+                        tab=="You" -> YouScreen(state, {page="edit"}, {page="cv"}, {tab="Growth"}, {page="saved"}, if (state.userId != null) signOut else signIn)
+                        else -> MatchesScreen(state,{detail=it},{page="edit"},{page="recommendations"})
                     }
                     }
                     }

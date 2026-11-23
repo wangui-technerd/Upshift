@@ -12,8 +12,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 
-@Composable fun EntryFlow(state: AppState) {
-    var screen by rememberSaveable { mutableStateOf(if (state.userId != null && state.cloudReady) "onboarding" else "welcome") }
+@Composable fun EntryFlow(state: AppState, initialScreen: String, recruiter: () -> Unit = {}) {
+    var screen by rememberSaveable { mutableStateOf(if (state.userId != null && state.cloudReady) "onboarding" else initialScreen) }
     var intro by rememberSaveable { mutableIntStateOf(0) }
     var onboarding by rememberSaveable { mutableIntStateOf(0) }
     LaunchedEffect(state.cloudReady) { if(state.cloudReady && state.userId != null) screen = "onboarding" }
@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
     if (state.userId != null && !state.cloudReady && !state.connecting) {
         Column(Modifier.fillMaxSize().safeDrawingPadding().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             BrandWordmark()
+            TextButton(onClick = recruiter) { Text("I'm hiring · Company workspace") }
             Text("Could not load your account")
             Text(state.syncMessage.ifBlank { "Check your connection and try again." })
             Button(onClick = { state.retrySync() }) { Text("Retry") }
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.dp
         "welcome" -> Column(Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
             Spacer(Modifier.height(28.dp))
             BrandWordmark()
+            TextButton(onClick=recruiter) { Text("I'm hiring · Company workspace") }
             Surface(color = BrandSoft, shape = MaterialTheme.shapes.large, modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     BrandMark(60.dp)
@@ -45,7 +47,7 @@ import androidx.compose.ui.unit.dp
             InfoCard("A little progress goes a long way", "Discover suitable roles, build a practical growth path and create your CV.", CoralSoft, OrangeInk)
             Button(onClick = { screen = "intro" }, modifier = Modifier.fillMaxWidth()) { Text("Get started") }
             OutlinedButton(onClick = { screen = "login" }, modifier = Modifier.fillMaxWidth()) { Text("Log in") }
-            TextButton(onClick = { if (state.profile.skills.isNotBlank()) state.enter() else screen = "onboarding" }, modifier = Modifier.fillMaxWidth()) { Text("Continue on this device") }
+            TextButton(onClick = { if (state.profile.skills.isNotBlank()) state.enter() else screen = "onboarding" }, modifier = Modifier.fillMaxWidth()) { Text("Continue as guest") }
         }
         "intro" -> {
             val titles=listOf("Know where you stand","Gaps, not verdicts","One step at a time")
@@ -132,11 +134,12 @@ import androidx.compose.ui.unit.dp
                 }
             }
             Button(onClick = { if (onboarding < 2) onboarding++ else state.enter() }, enabled = onboarding != 0 || state.profile.name.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text(if (onboarding == 2) "See my matches" else "Continue") }
+            if (state.userId != null) TextButton(onClick = { state.leave(); screen = "welcome" }) { Text("Sign out") }
             TextButton(onClick = { if (onboarding > 0) onboarding-- else screen = "welcome" }) { Text("← Back") }
         }
     }
 }
-@Composable fun AccountScreen(mode: String, navigate: (String) -> Unit, local: (String, String) -> Unit, gateway: AccountGateway, authenticated: suspend (String) -> Boolean) {
+@Composable fun AccountScreen(mode: String, navigate: (String) -> Unit, local: (String, String) -> Unit, gateway: AccountGateway, authenticated: suspend (String) -> Boolean, recruiter: Boolean = false) {
     var name by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -165,7 +168,8 @@ import androidx.compose.ui.unit.dp
     Column(Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).imePadding().padding(24.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
         TextButton(enabled = !request, onClick = { navigate("welcome") }) { Text("← Back") }
         BrandWordmark()
-        Heading(when(mode) { "signup" -> "Your next chapter starts here"; "reset" -> "Reset your password"; else -> "Welcome back" }, if(mode == "reset") "Enter the email associated with your account." else if(mode == "signup") "Create an account to keep your progress together." else "Pick up where you left off.")
+        if(recruiter) StatusPill("COMPANY WORKSPACE",BrandSoft,BrandDeep)
+        Heading(when(mode) { "signup" -> if(recruiter) "Open a door to talent" else "Your next chapter starts here"; "reset" -> "Reset your password"; else -> "Welcome back" }, if(mode == "reset") "Enter the email associated with your account." else if(recruiter) "Register your company and create meaningful opportunities. Company approval is required before submission." else if(mode == "signup") "Create an account to keep your progress together." else "Pick up where you left off.")
         if (mode == "signup") Field("Full name",name) { name=it }
         OutlinedTextField(email,{ email=it; feedback="" }, label={Text("Email address")},singleLine=true,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Email),modifier=Modifier.fillMaxWidth())
         if (mode != "reset") OutlinedTextField(password,{password=it; feedback=""},label={Text("Password")},singleLine=true,visualTransformation=if(reveal) VisualTransformation.None else PasswordVisualTransformation(),trailingIcon={TextButton(onClick={reveal=!reveal}){Text(if(reveal) "Hide" else "Show")}},keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Password),modifier=Modifier.fillMaxWidth())
@@ -189,7 +193,9 @@ import androidx.compose.ui.unit.dp
         }
         if(mode=="login") TextButton(enabled=!request,onClick={navigate("reset")}){Text("Forgot password?")}
         TextButton(enabled=!request,onClick={navigate(if(mode=="signup") "login" else "signup")}){Text(if(mode=="signup") "Already have an account? Log in" else "New here? Create an account")}
-        HorizontalDivider(color=Line)
-        TextButton(enabled=!request,onClick={local(name,email)},modifier=Modifier.fillMaxWidth()){Text("Continue on this device")}
+        if(!recruiter) {
+            HorizontalDivider(color=Line)
+            TextButton(enabled=!request,onClick={local(name,email)},modifier=Modifier.fillMaxWidth()){Text("Continue as guest")}
+        }
     }
 }
