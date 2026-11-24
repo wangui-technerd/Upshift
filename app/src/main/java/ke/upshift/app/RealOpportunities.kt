@@ -8,7 +8,8 @@ import java.time.LocalDate
 
 /** Bundled source-backed research; no fabricated fallback and no client-side publishing. */
 class RealOpportunitiesRepository(context: Context) : OpportunitiesRepository {
-    private val catalogue = context.assets.open("opportunities.json").bufferedReader().use { reader ->
+    private val applicationContext = context.applicationContext
+    private val catalogue by lazy { applicationContext.assets.open("opportunities.json").bufferedReader().use { reader ->
         val rows = JSONArray(reader.readText())
         (0 until rows.length()).mapNotNull { index ->
             val row = rows.getJSONObject(index)
@@ -20,7 +21,7 @@ class RealOpportunitiesRepository(context: Context) : OpportunitiesRepository {
                 }
             })
         }
-    }
+    } }
     override fun roles() = catalogue.filter { it.isDiscoverable() }
 }
 

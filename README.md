@@ -55,6 +55,8 @@ Fraunces headings, Karla body text, blue/deep blue, cream, orange/peach, mint/te
 
 ## Verification
 
+For real Android UI journeys against the local Firebase emulators and model backend, follow [the repeatable emulator test guide](docs/EMULATOR_TESTING.md). The suite covers student authentication, recommendations, error/retry handling, learning, CV export and recruiter moderation. Use the direct-backend emulator build for interactive testing after the suite.
+
 `gradlew :app:assemblePreview :app:testDebugUnitTest :app:lintDebug`
 
 Unit coverage protects percentage-vs-count ranking, empty profiles, duplicate skill handling and streak boundaries. The `qa` build uses the separate `ke.upshift.app.qa` application ID for isolated emulator tests without overwriting a user's profile. Build it with `:app:assembleQa`.

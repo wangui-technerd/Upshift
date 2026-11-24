@@ -75,7 +75,7 @@ val OrangeInk=Color(0xFF85430E)
     Field("Other skills, separated by commas",state.profile.skills,false){state.update(state.profile.copy(skills=it))}
 }
 @Composable fun Field(label:String,value:String,single:Boolean=true,change:(String)->Unit) {
-    OutlinedTextField(value,change,label={Text(label)},singleLine=single,minLines=if(single)1 else 3,modifier=Modifier.fillMaxWidth(),shape=RoundedCornerShape(12.dp))
+    OutlinedTextField(value,change,label={Text(label)},singleLine=single,minLines=if(single)1 else 3,maxLines=if(single)1 else 6,modifier=Modifier.fillMaxWidth(),shape=RoundedCornerShape(12.dp))
 }
 @Composable fun ProfileFields(state:AppState) {
     val p=state.profile

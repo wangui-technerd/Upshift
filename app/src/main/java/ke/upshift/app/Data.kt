@@ -13,6 +13,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 data class Role(
     val id: String, val title: String, val company: String, val location: String,
@@ -108,7 +109,9 @@ class AppState(context: Context, val repository: OpportunitiesRepository = RealO
     var restoring by mutableStateOf(backend.uid != null); private set
     var syncMessage by mutableStateOf(""); private set
     var cloudReady by mutableStateOf(false); private set
-    var roles by mutableStateOf(repository.roles()); private set
+    private var bundledRoles = emptyList<Role>()
+    private var cloudRoles = emptyList<Role>()
+    var roles by mutableStateOf(emptyList<Role>()); private set
     var profile by mutableStateOf(StudentProfile()); private set
     var entered by mutableStateOf(false); private set
     var saved by mutableStateOf(emptySet<String>()); private set
@@ -119,11 +122,31 @@ class AppState(context: Context, val repository: OpportunitiesRepository = RealO
     private var profileDirty = false
     private val pendingSaved = mutableMapOf<String, Boolean>()
     private val pendingLearning = mutableMapOf<String, PendingLearning>()
+    private var recommendationProfile: StudentProfile? = null
+    private var recommendationResults = mutableStateOf<List<VacancyMatch>?>(null)
+    internal fun recommendationsFor(profile: StudentProfile): MutableState<List<VacancyMatch>?> {
+        if (recommendationProfile != profile) {
+            recommendationProfile = profile
+            recommendationResults = mutableStateOf(null)
+        }
+        return recommendationResults
+    }
+    private fun clearRecommendations() {
+        recommendationProfile = null
+        recommendationResults = mutableStateOf(null)
+    }
     private var targetDirty = false
     private var pendingTarget = ""
     private var pendingWrites = 0
     var saving by mutableStateOf(false); private set
-    init { loadLocal(); if (backend.uid != null) scope.launch { try { connectAccount() } finally { restoring = false } } }
+    init {
+        loadLocal()
+        scope.launch {
+            bundledRoles = withContext(Dispatchers.IO) { repository.roles() }
+            roles = mergeOpportunities(bundledRoles, cloudRoles)
+        }
+        if (backend.uid != null) scope.launch { try { connectAccount() } finally { restoring = false } }
+    }
     private fun loadLocal() {
         val json = runCatching { JSONObject(prefs.getString("profile", "{}")!!) }.getOrDefault(JSONObject())
         profile = profileFromCloud(json.keys().asSequence().associateWith { json.optString(it) })
@@ -138,12 +161,13 @@ class AppState(context: Context, val repository: OpportunitiesRepository = RealO
         val uid = backend.uid ?: return false
         handler.removeCallbacks(persistDraft)
         connecting = true; cloudReady = false; entered = false; syncMessage = ""
+        clearRecommendations()
         listeners.forEach { it.remove() }; listeners = emptyList()
         // Never carry another account's or a guest's data into a cloud account.
         userId = uid; pendingWrites = 0; saving = false
         prefs = context.getSharedPreferences("upshift-account-$uid", Context.MODE_PRIVATE)
         profile = StudentProfile(); saved = emptySet(); completed = emptySet()
-        activityDays = emptySet(); evidence = "{}"; targetId = null; roles = repository.roles()
+        activityDays = emptySet(); evidence = "{}"; targetId = null; cloudRoles = emptyList(); roles = bundledRoles
         profileDirty = prefs.getBoolean("profilePending", false)
         val localProfile = runCatching { JSONObject(prefs.getString("profile", "{}")!!) }.getOrDefault(JSONObject())
         if (profileDirty) profile = profileFromCloud(localProfile.keys().asSequence().associateWith { localProfile.optString(it) })
@@ -171,7 +195,7 @@ class AppState(context: Context, val repository: OpportunitiesRepository = RealO
                     evidence = JSONObject(merged.values.associate { it.skill to it.notes }).toString()
                     prefs.edit().putStringSet("completed", completed).putString("evidence", evidence).apply()
                 } }, { if (userId == uid) syncMessage = accountError(it) }),
-                backend.listenRoles({ if (userId == uid) roles = mergeOpportunities(repository.roles(), it) }, { if (userId == uid) syncMessage = accountError(it) })
+                backend.listenRoles({ if (userId == uid) { cloudRoles = it; roles = mergeOpportunities(bundledRoles, cloudRoles) } }, { if (userId == uid) syncMessage = accountError(it) })
             )
             if (name.isNotBlank()) update(profile.copy(name = name.trim()))
             retrySync()
@@ -267,9 +291,10 @@ class AppState(context: Context, val repository: OpportunitiesRepository = RealO
     fun xp() = completed.size * 25
     fun enter() { entered = true; prefs.edit().putBoolean("entered", true).apply(); flushProfile() }
     fun leave() { flushProfile(); backend.signOut(); scope.launch { backend.clearCredentialState() }; detach(); userId = null; cloudReady = false
+        clearRecommendations()
         prefs = context.getSharedPreferences("upshift", Context.MODE_PRIVATE); loadLocal()
         pendingSaved.clear(); pendingLearning.clear(); targetDirty=false; pendingWrites=0; saving=false
-        roles = repository.roles(); entered = false; syncMessage = ""
+        cloudRoles = emptyList(); roles = bundledRoles; entered = false; syncMessage = ""
         prefs.edit().putBoolean("entered", false).apply()
     }
     private fun detach() { handler.removeCallbacks(persistDraft); listeners.forEach { it.remove() }; listeners = emptyList(); profileDirty = false }
@@ -283,13 +308,16 @@ class AppState(context: Context, val repository: OpportunitiesRepository = RealO
     fun update(p: StudentProfile) {
         if (userId != null && !cloudReady) return
         profile = if (userId == null) p else p.copy(email = backend.auth?.currentUser?.email.orEmpty())
-        profileDirty = true; cacheProfile(); if(userId!=null) persistQueues(); handler.removeCallbacks(persistDraft); handler.postDelayed(persistDraft, 700)
+        // Keep keystrokes in Compose state; serialize and save once typing pauses.
+        // onStop/Done/enter/sign-out still flush synchronously before leaving.
+        profileDirty = true; handler.removeCallbacks(persistDraft); handler.postDelayed(persistDraft, 700)
     }
     fun flushProfile() { handler.removeCallbacks(persistDraft); if (profileDirty) persistProfile() }
     private fun cacheProfile() { prefs.edit().putString("profile", JSONObject(profile.cloudMap()).toString()).apply() }
     private fun persistProfile() {
         cacheProfile()
         val uid = userId
+        if (uid != null) persistQueues()
         if (uid != null && cloudReady) {
             val snapshot = profile
             val done = callback(uid)

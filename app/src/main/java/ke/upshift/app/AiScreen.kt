@@ -22,7 +22,7 @@ internal fun RecommendationsScreen(state: AppState, editProfile: () -> Unit, sig
     val profile = state.profile
     var filterLocation by rememberSaveable { mutableStateOf(false) }
     var experience by rememberSaveable { mutableStateOf("") }
-    var matches by remember(profile) { mutableStateOf<List<VacancyMatch>?>(null) }
+    var matches by remember(profile) { state.recommendationsFor(profile) }
     var failure by remember(profile) { mutableStateOf<AiFailure?>(null) }
     var busy by remember { mutableStateOf(false) }
     var slow by remember { mutableStateOf(false) }
@@ -121,7 +121,7 @@ internal fun RecommendationsScreen(state: AppState, editProfile: () -> Unit, sig
 @Composable
 internal fun FeedbackScreen(state: AppState, signIn: () -> Unit, back: () -> Unit) {
     var draft by rememberSaveable(state.userId) { mutableStateOf("") }
-    var sentiment by remember { mutableStateOf<String?>(null) }
+    var sentiment by rememberSaveable(state.userId) { mutableStateOf<String?>(null) }
     var failure by remember { mutableStateOf<AiFailure?>(null) }
     var busy by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()

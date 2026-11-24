@@ -11,7 +11,7 @@ layout.buildDirectory.set(file("${System.getProperty("java.io.tmpdir")}/upshift-
 android {
     namespace = "ke.upshift.app"
     compileSdk = 37
-    defaultConfig { applicationId = "ke.upshift.app"; minSdk = 26; targetSdk = 37; versionCode = 1; versionName = "0.1.0" }
+    defaultConfig { applicationId = "ke.upshift.app"; minSdk = 26; targetSdk = 37; versionCode = 1; versionName = "0.1.0"; testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner" }
     defaultConfig {
         buildConfigField("boolean", "FIREBASE_EMULATORS", "false")
         buildConfigField("String", "FIREBASE_EMULATOR_HOST", "\"10.0.2.2\"")
@@ -24,6 +24,9 @@ android {
             buildConfigField("String", "FIREBASE_EMULATOR_HOST", "\"$firebaseEmulatorHost\"")
             if (firebaseEmulators && aiBaseUrl.isNullOrBlank()) {
                 buildConfigField("String", "AI_BASE_URL", "\"http://$firebaseEmulatorHost:8122\"")
+            }
+            if (firebaseEmulators && providers.gradleProperty("vacancyBaseUrl").orNull.isNullOrBlank()) {
+                buildConfigField("String", "VACANCY_BASE_URL", "\"${aiBaseUrl ?: "http://$firebaseEmulatorHost:8122"}\"")
             }
         }
         getByName("release") {
@@ -45,6 +48,7 @@ android {
         }
     }
     buildFeatures { compose = true; buildConfig = true }
+    testOptions { execution = "ANDROIDX_TEST_ORCHESTRATOR" }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
 }
 dependencies {
@@ -58,6 +62,12 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.4")
     testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.8")
+    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
+    androidTestImplementation("androidx.test.espresso:espresso-intents:3.6.1")
+    androidTestUtil("androidx.test:orchestrator:1.5.1")
     implementation("androidx.activity:activity-compose:1.11.0")
     implementation("androidx.fragment:fragment-ktx:1.6.0")
     implementation("androidx.compose.material3:material3:1.3.2")
