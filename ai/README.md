@@ -15,7 +15,7 @@ This project contains two separate NLP tasks:
 1. **Job retrieval and skill evidence:** TF-IDF lexical matching and a local pretrained sentence encoder; ESCO concept IDs with explicit local extensions.
 2. **Sentiment comparison:** VADER versus a supervised TF-IDF/logistic-regression classifier on independently labelled TweetEval sentiment data. Sentiment is never used to rank employability.
 
-Career-category classification is a supporting experiment, not the job-ranking model. A conversational generative coach is not implemented by these classifiers.
+The earlier career-category experiment remains in the base notebook; it is not part of the final job-ranking walkthrough. A conversational generative coach is not implemented by these classifiers.
 
 ## Run
 
