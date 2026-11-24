@@ -42,4 +42,20 @@ class MatchingProgressTest {
         val edited=original.copy(skills="Kotlin")
         assertEquals(setOf("kotlin"),edited.skillSet())
     }
+    @Test fun addingLearnedSkillUpdatesCoverageAndKeepsProfileDetails() {
+        val original = StudentProfile(name="Student", skills="Python", projects="A data project")
+        val updated = original.withSkill("SQL")
+        val job = role(listOf("Python", "SQL"))
+        assertEquals(50, scorer.percentage(job, original))
+        assertEquals(100, scorer.percentage(job, updated))
+        assertEquals(original.name, updated.name)
+        assertEquals(original.projects, updated.projects)
+        assertEquals(setOf("python", "sql"), updated.skillSet())
+    }
+    @Test fun repeatedCourseCompletionCannotDuplicateSkillOrInflatePercentage() {
+        val original = StudentProfile(skills="Python, SQL")
+        assertEquals(original, original.withSkill(" sql "))
+        assertEquals(original, original.withSkill(""))
+        assertEquals(100, scorer.percentage(role(listOf("Python", "SQL")), original.withSkill("SQL")))
+    }
 }

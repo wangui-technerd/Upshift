@@ -46,6 +46,11 @@ class DemoOpportunitiesRepository : OpportunitiesRepository {
 data class StudentProfile(val name: String = "", val email: String = "", val phone: String = "", val education: String = "", val skills: String = "", val summary: String = "", val projects: String = "", val experience: String = "", val location: String = "", val goal: String = "Internship") {
     private val normalisedSkills by lazy { skills.split(",").map { it.trim().lowercase() }.filter { it.isNotEmpty() }.toSet() }
     fun skillSet() = normalisedSkills
+    fun withSkill(skill: String): StudentProfile {
+        val added = skill.trim()
+        if (added.isEmpty() || added.lowercase() in skillSet()) return this
+        return copy(skills = listOf(skills.trim().trimEnd(','), added).filter { it.isNotBlank() }.joinToString(", "))
+    }
 }
 interface MatchScorer { fun percentage(role: Role, profile: StudentProfile): Int? }
 class SkillCoverageScorer : MatchScorer {
@@ -264,9 +269,9 @@ class AppState(context: Context, val repository: OpportunitiesRepository = RealO
         return LearningLibrary.filter { it.skill in needed || it.skill in completed }.sortedWith(compareByDescending<LearningStep> { step -> targets.count { step.skill in gaps(it) } }.thenBy { it.skill })
     }
     fun evidenceFor(skill: String) = runCatching { JSONObject(evidence).optString(skill) }.getOrDefault("")
-    fun recordStep(skill: String, notes: String) {
-        if (notes.trim().length !in 20..2000) { syncMessage = "Use a reflection of 20 to 2000 characters."; return }
-        if (userId != null && !cloudReady) return
+    fun recordStep(skill: String, notes: String, addToProfile: Boolean = false): Boolean {
+        if (notes.trim().length !in 20..2000) { syncMessage = "Use a reflection of 20 to 2000 characters."; return false }
+        if (userId != null && !cloudReady) return false
         evidence = JSONObject(evidence).apply { put(skill, notes.trim()) }.toString()
         completed = completed + skill
         val day = LocalDate.now(ZoneId.of("Africa/Nairobi")).toString()
@@ -275,6 +280,15 @@ class AppState(context: Context, val repository: OpportunitiesRepository = RealO
         userId?.let { uid ->
             val item=PendingLearning(notes.trim(),true,day); pendingLearning[skill]=item; persistQueues(); sendLearning(uid,skill,item)
         }
+        if (addToProfile) {
+            val updated = profile.withSkill(skill)
+            if (updated != profile) {
+                update(updated)
+                clearRecommendations()
+                flushProfile()
+            }
+        }
+        return true
     }
     fun undoStep(skill: String) {
         completed = completed - skill; prefs.edit().putStringSet("completed", completed).apply()

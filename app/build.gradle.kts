@@ -1,6 +1,6 @@
 plugins { id("com.android.application"); id("org.jetbrains.kotlin.plugin.compose") }
 // Missing project configuration keeps guest use available, with an explicit auth error.
-if (file("google-services.json").exists()) apply(plugin = "com.google.gms.google-services")
+if (file("google-services.json").exists() && providers.gradleProperty("skipGoogleServices").orNull != "true") apply(plugin = "com.google.gms.google-services")
 val firebaseEmulators = providers.gradleProperty("firebaseEmulators").orNull == "true"
 val firebaseEmulatorHost = providers.gradleProperty("firebaseEmulatorHost").orElse("10.0.2.2").get()
 require(firebaseEmulatorHost in setOf("10.0.2.2", "127.0.0.1")) {
@@ -42,6 +42,9 @@ android {
         }
         create("qa") {
             initWith(getByName("preview"))
+            isDebuggable = true
+            isMinifyEnabled = false
+            isShrinkResources = false
             applicationIdSuffix = ".qa"
             versionNameSuffix = "-qa"
             matchingFallbacks += "release"
@@ -49,6 +52,7 @@ android {
     }
     buildFeatures { compose = true; buildConfig = true }
     testOptions { execution = "ANDROIDX_TEST_ORCHESTRATOR" }
+    testBuildType = providers.gradleProperty("instrumentedBuildType").orElse("debug").get()
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
 }
 dependencies {

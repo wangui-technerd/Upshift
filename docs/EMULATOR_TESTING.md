@@ -1,6 +1,16 @@
 # Repeatable emulator checks
 
-These checks run on Pixel 8a / Android 14 against `demo-upshift`. They use fictional accounts, employers and vacancies. They do not validate production Firebase, Google sign-in, course enrolment, or a physical phone.
+## Learning completion check
+
+The isolated QA test covers both confirmation choices: adding SQL changes a two-skill job from 50% to 100% and persists the profile; saving progress only leaves the skills and percentage unchanged. Repeated completion does not duplicate skills. This test uses local guest data in `ke.upshift.app.qa`, not the demo account.
+
+```powershell
+.\gradlew.bat :app:testQaUnitTest :app:connectedQaAndroidTest -PinstrumentedBuildType=qa -PskipGoogleServices=true "-Pandroid.testInstrumentationRunnerArguments.class=ke.upshift.app.LearningCompletionTest"
+```
+
+Normal app builds still use the usual Firebase configuration and debug test target. These flags apply only to the isolated test build.
+
+The full journey checks below run on Pixel 8a / Android 14 against `demo-upshift`. They use fictional accounts, employers and vacancies. They do not validate production Firebase, Google sign-in, course enrolment, or a physical phone.
 
 ## Start the local services
 

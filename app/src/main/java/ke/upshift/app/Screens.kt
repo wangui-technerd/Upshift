@@ -170,7 +170,7 @@ import androidx.compose.ui.platform.LocalUriHandler
                 }
             }
         }
-        item{Text("Provider fees may apply. Certificates are issued by the provider; your skill reviews are tracked here.",style=MaterialTheme.typography.bodySmall,color=Muted)}
+        item{Text("Provider fees may apply. Record your learning, then choose whether to add the skill to your profile and update your job matches.",style=MaterialTheme.typography.bodySmall,color=Muted)}
         if(linkError.isNotBlank())item{InfoCard("Could not open course",linkError,CoralSoft,OrangeInk)}
         if(target!=null)item{
             InfoCard("Focused on ${target.title}","${state.gaps(target).size} skills to develop for ${target.company}.",BrandSoft,BrandDeep)

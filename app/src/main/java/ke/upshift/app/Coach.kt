@@ -44,6 +44,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 @Composable fun PracticeSheet(state:AppState,step:LearningStep,dismiss:()->Unit) {
     var notes by rememberSaveable(step.skill){mutableStateOf(state.evidenceFor(step.skill))}
     var error by remember{mutableStateOf("")}
+    var confirmSkill by rememberSaveable(step.skill){mutableStateOf(false)}
+    fun save(addSkill: Boolean) {
+        if (state.recordStep(step.skill, notes, addToProfile = addSkill)) dismiss()
+        else error = "Your profile is still loading. Please try again."
+    }
     ModalBottomSheet(onDismissRequest=dismiss,sheetState=rememberModalBottomSheetState(skipPartiallyExpanded=true),containerColor=Paper) {
         Column(Modifier.fillMaxWidth().fillMaxHeight(0.9f).imePadding()) {
             Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal=24.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
@@ -59,10 +64,21 @@ import androidx.compose.foundation.shape.RoundedCornerShape
             }
             Surface(color=Paper) {
                 Column(Modifier.fillMaxWidth().padding(horizontal=24.dp,vertical=12.dp)) {
-                    Button(onClick={if(notes.trim().length !in 20..2000)error="Add a reflection of 20 to 2000 characters." else {state.recordStep(step.skill,notes);dismiss()}},modifier=Modifier.fillMaxWidth()){Text(if(step.skill in state.completed)"Save updated evidence" else "Mark practice complete")}
+                    Button(onClick={
+                        if(notes.trim().length !in 20..2000) error="Add a reflection of 20 to 2000 characters."
+                        else if(step.skill.lowercase() !in state.profile.skillSet()) confirmSkill=true
+                        else save(false)
+                    },modifier=Modifier.fillMaxWidth()){Text(if(step.skill in state.completed)"Save updated evidence" else "Mark practice complete")}
                     TextButton(onClick=dismiss,modifier=Modifier.fillMaxWidth()){Text("Close")}
                 }
             }
         }
     }
+    if (confirmSkill) AlertDialog(
+        onDismissRequest={confirmSkill=false},
+        title={Text("Add ${step.skill} to your profile?")},
+        text={Text("Confirm you can use this skill. It will be saved as a skill you reported, and your job skills-match percentages will update. Your certificate is not verified here.")},
+        confirmButton={TextButton(onClick={confirmSkill=false;save(true)}){Text("Add skill & complete")}},
+        dismissButton={TextButton(onClick={confirmSkill=false;save(false)}){Text("Save progress only")}}
+    )
 }
