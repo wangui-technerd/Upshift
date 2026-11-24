@@ -2,9 +2,11 @@
 
 ## Main notebook for review
 
-Use [UpShift_Clear_Steps.ipynb](notebooks/UpShift_Clear_Steps.ipynb). It follows the group's preferred numbered-step style, with short explanations, visible code and executed outputs. All stages, including model saving and a local AI-service interface, are defined in that one notebook. It runs from the three original CSVs without importing this project's Python modules. Its sentiment comparison additionally downloads the labelled TweetEval benchmark. Outputs and trained models are saved in a separate results folder.
+Use **[MiniLM_Final.ipynb](notebooks/MiniLM_Final.ipynb)**. It contains the full workflow with executed results, five figures and short numbered explanations. It embeds the shared model functions and saves the same schema-2 bundle and encoder format loaded by the app. It requires the three original CSVs; TweetEval and the pretrained encoder are downloaded on a fresh run.
 
-The notebook's small API demonstrates the service interface for assessment. The engineering service described below has its own documented schema for the teammate's integration; agree on that contract before connecting Android.
+[Open in Colab](https://colab.research.google.com/github/CoIlins/SemProject_MLEngine/blob/main/MiniLM_Final.ipynb) · [AI submission repository](https://github.com/CoIlins/SemProject_MLEngine) · [Original base notebook](notebooks/LogisticRegression_Base.ipynb)
+
+Earlier clear-steps notebooks and the standalone service described below remain development history. Use the final notebook for assessment and [the current backend guide](../backend/README.md) for Android integration.
 
 This project contains two separate NLP tasks:
 
