@@ -2,9 +2,9 @@
 
 ## Main notebook for review
 
-Use **[MiniLM_Final.ipynb](notebooks/MiniLM_Final.ipynb)**. It contains the full workflow with executed results, five figures and short numbered explanations. It embeds the shared model functions and saves the same schema-2 bundle and encoder format loaded by the app. It requires the three original CSVs; TweetEval and the pretrained encoder are downloaded on a fresh run.
+Use **[SemanticMatching_Final.ipynb](notebooks/SemanticMatching_Final.ipynb)**. It contains the full workflow with executed results, five figures and short numbered explanations. It embeds the shared model functions and saves the same schema-2 bundle and encoder format loaded by the app. It requires the three original CSVs; TweetEval and the pretrained encoder are downloaded on a fresh run.
 
-[Open in Colab](https://colab.research.google.com/github/CoIlins/SemProject_MLEngine/blob/main/MiniLM_Final.ipynb) · [AI submission repository](https://github.com/CoIlins/SemProject_MLEngine) · [Original base notebook](notebooks/LogisticRegression_Base.ipynb)
+[Open in Colab](https://colab.research.google.com/github/CoIlins/SemProject_MLEngine/blob/main/SemanticMatching_Final.ipynb) · [AI submission repository](https://github.com/CoIlins/SemProject_MLEngine) · [Original base notebook](notebooks/LogisticRegression_Base.ipynb)
 
 Saved outputs and five figures are included for assessment; no setup is needed to read them. Step 1 is a short optional cell for rerunning with your own folder containing the three original CSVs. See the [run instructions](https://github.com/CoIlins/SemProject_MLEngine#read-or-rerun).
 
