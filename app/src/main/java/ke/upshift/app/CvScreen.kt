@@ -58,7 +58,6 @@ fun cvSections(p:StudentProfile)=listOf("PROFILE" to p.summary,"EDUCATION" to p.
             if(status.isNotBlank())InfoCard("Saved",status,Mint,Teal)
             if(error.isNotBlank())Text(error,color=MaterialTheme.colorScheme.error)
             Button(enabled=!saving,onClick={pendingProfile=state.profile;savePdf.launch("Upshift-CV.pdf")},modifier=Modifier.fillMaxWidth()){Text(if(saving)"Saving…" else "Save CV as PDF")}
-            OutlinedButton(onClick={val manager=context.getSystemService(Context.PRINT_SERVICE)as PrintManager;manager.print("Upshift CV",CvPrintAdapter(state.profile),PrintAttributes.Builder().setMediaSize(PrintAttributes.MediaSize.ISO_A4).build())},modifier=Modifier.fillMaxWidth()){Text("Print CV")}
         }
         Spacer(Modifier.height(24.dp))
     }
@@ -105,20 +104,4 @@ fun writeCvPdf(profile:StudentProfile,output:OutputStream,ranges:Array<out PageR
         pdf.writeTo(output)
     }finally{pdf.close()}
     return pages.size
-}
-class CvPrintAdapter(private val profile:StudentProfile):PrintDocumentAdapter(){
-    private val scope=CoroutineScope(SupervisorJob()+Dispatchers.IO)
-    override fun onLayout(old:PrintAttributes?,new:PrintAttributes?,signal:CancellationSignal,callback:LayoutResultCallback,extras:Bundle?){
-        if(signal.isCanceled)callback.onLayoutCancelled()else callback.onLayoutFinished(PrintDocumentInfo.Builder("Upshift-CV.pdf").setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT).setPageCount(cvPages(profile).size).build(),true)
-    }
-    override fun onWrite(ranges:Array<out PageRange>,destination:ParcelFileDescriptor,signal:CancellationSignal,callback:WriteResultCallback){
-        scope.launch{
-            try{
-                java.io.FileOutputStream(destination.fileDescriptor).use{writeCvPdf(profile,it,ranges,signal)}
-                withContext(Dispatchers.Main){callback.onWriteFinished(ranges)}
-            }catch(_:java.util.concurrent.CancellationException){withContext(Dispatchers.Main){callback.onWriteCancelled()}}
-            catch(_:Exception){withContext(Dispatchers.Main){callback.onWriteFailed("Could not export CV. Please try again.")}}
-        }
-    }
-    override fun onFinish(){scope.cancel();super.onFinish()}
 }

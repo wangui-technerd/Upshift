@@ -19,6 +19,7 @@ import org.json.JSONObject
 @Composable fun RecruiterWorkspace(state:AppState,student:()->Unit) {
     var uid by remember { mutableStateOf(state.backend.uid) }
     var authPage by rememberSaveable { mutableStateOf("login") }
+    androidx.activity.compose.BackHandler(enabled=uid==null) { if(authPage=="reset")authPage="login" else student() }
     if(uid==null) {
         if(authPage=="welcome") {
             Column(Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(24.dp),verticalArrangement=Arrangement.spacedBy(20.dp)) {
@@ -29,7 +30,10 @@ import org.json.JSONObject
                 OutlinedButton(onClick={authPage="login"},modifier=Modifier.fillMaxWidth()){Text("Sign in")}
                 TextButton(onClick=student){Text("I'm looking for opportunities")}
             }
-        } else AccountScreen(authPage,{authPage=it},{_,_->},state.backend,{uid=state.backend.uid;uid!=null},recruiter=true)
+        } else Column(Modifier.fillMaxSize()) {
+            TextButton(onClick=student,modifier=Modifier.statusBarsPadding()) { Text("← Student workspace") }
+            Box(Modifier.weight(1f)) { AccountScreen(authPage,{authPage=it},{_,_->},state.backend,{uid=state.backend.uid;uid!=null},recruiter=true) }
+        }
         return
     }
     key(uid) { RecruiterSignedIn(state,uid!!,student,{state.leave();uid=null;authPage="welcome"}) }
@@ -57,10 +61,11 @@ import org.json.JSONObject
         finally { loading=false }
     }
     fun perform(block:suspend ()->Unit) { if(busy)return;busy=true;error="";scope.launch { try{block()}catch(e:CancellationException){throw e}catch(e:Exception){error=e.message ?: "Could not complete the request."}finally{busy=false} } }
-    androidx.activity.compose.BackHandler(enabled=editor!=null || newCompany || tab!="Overview") { editor=null;newCompany=false;tab="Overview" }
+    androidx.activity.compose.BackHandler { when { editor!=null -> editor=null; newCompany -> newCompany=false; tab!="Overview" -> tab="Overview"; else -> student() } }
     Scaffold(containerColor=Paper,topBar={
         Column(Modifier.statusBarsPadding().padding(horizontal=20.dp,vertical=8.dp)) {
             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
+                TextButton(onClick={when { editor!=null -> editor=null; newCompany -> newCompany=false; tab!="Overview" -> tab="Overview"; else -> student() }}) { Text("← Back") }
                 BrandWordmark();Box {
                     IconButton(onClick={menu=true}){Icon(painterResource(R.drawable.ic_menu),"Workspace menu",tint=BrandDeep)}
                     DropdownMenu(expanded=menu,onDismissRequest={menu=false}) {
@@ -81,7 +86,7 @@ import org.json.JSONObject
         }
     }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).imePadding().verticalScroll(rememberScrollState()).padding(horizontal=20.dp,vertical=12.dp),verticalArrangement=Arrangement.spacedBy(18.dp)) {
-            if(error.isNotBlank()) { InfoCard("Let's try that again",error,CoralSoft,OrangeInk);TextButton(onClick={reload++},enabled=!loading){Text("Retry")}}
+            if(error.isNotBlank()) AlertDialog(onDismissRequest={error=""},title={Text("Couldn’t complete that")},text={Text(error)},confirmButton={TextButton(onClick={error=""}){Text("OK")}})
             if(message.isNotBlank()) { Text(message,color=Teal,style=MaterialTheme.typography.bodySmall);TextButton(onClick={message=""}){Text("Dismiss")}}
             if(busy) { LinearProgressIndicator(modifier=Modifier.fillMaxWidth());Text("Saving your changes…",style=MaterialTheme.typography.bodySmall) }
             when {

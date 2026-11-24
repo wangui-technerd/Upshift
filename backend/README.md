@@ -6,6 +6,8 @@ See [vacancy setup and test guide](../docs/VACANCY_BACKEND.md) for server config
 
 Accounts, profiles, saved roles and learning progress use Firebase. There is no local password/session database or SQLite application database. The matching and sentiment endpoints require the separately configured trusted model artifact.
 
+`POST /feedback` accepts a Firebase ID token and `{ "text": "...", "submission_id": "a UUID" }`. It saves the message to the server-only Firestore `feedback` collection and returns `status: received` after the write succeeds. Repeating the same ID and message does not create a duplicate. This endpoint is separate from `/sentiment`, which analyses tone without submitting a message. Deploy/restart the backend alongside the updated Android app; the new app cannot submit feedback to older backend versions. Feedback records are available to authorised project administrators through the Firebase console; there is no public feedback feed.
+
 From the repository folder in PowerShell:
 
 ```powershell

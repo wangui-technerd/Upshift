@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
     var onboarding by rememberSaveable { mutableIntStateOf(0) }
     LaunchedEffect(state.cloudReady) { if(state.cloudReady && state.userId != null) screen = "onboarding" }
     androidx.activity.compose.BackHandler(enabled = screen != "welcome") {
-        when { screen == "onboarding" && onboarding > 0 -> onboarding--; screen == "intro" && intro > 0 -> intro--; else -> screen = "welcome" }
+        when { screen == "reset" -> screen="login"; screen == "onboarding" && onboarding > 0 -> onboarding--; screen == "intro" && intro > 0 -> intro--; else -> screen = "welcome" }
     }
     if (state.userId != null && !state.cloudReady && !state.connecting) {
         Column(Modifier.fillMaxSize().safeDrawingPadding().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -54,7 +54,7 @@ import androidx.compose.ui.unit.dp
             val descriptions=listOf("Compare your skills with a role’s requirements. Add your profile next to see your own matches.","Keep the skills you have in view, then choose a skill to develop. You don’t have to learn everything at once.","Choose a target role, explore a certificate programme and keep a record of your learning.")
             Column(Modifier.fillMaxSize().safeDrawingPadding()) {
                 Row(Modifier.fillMaxWidth().padding(horizontal=24.dp,vertical=8.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween) {
-                    BrandWordmark();TextButton(onClick={screen="signup"}){Text("Skip")}
+                    TextButton(onClick={if(intro>0)intro-- else screen="welcome"}){Text("← Back")};BrandWordmark();TextButton(onClick={screen="signup"}){Text("Skip")}
                 }
                 BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
                     val viewport=maxHeight
@@ -166,7 +166,7 @@ import androidx.compose.ui.unit.dp
     }
     androidx.activity.compose.BackHandler(enabled = request) { }
     Column(Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).imePadding().padding(24.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-        TextButton(enabled = !request, onClick = { navigate("welcome") }) { Text("← Back") }
+        TextButton(enabled = !request, onClick = { navigate(if(mode=="reset") "login" else "welcome") }) { Text("← Back") }
         BrandWordmark()
         if(recruiter) StatusPill("COMPANY WORKSPACE",BrandSoft,BrandDeep)
         Heading(when(mode) { "signup" -> if(recruiter) "Open a door to talent" else "Your next chapter starts here"; "reset" -> "Reset your password"; else -> "Welcome back" }, if(mode == "reset") "Enter the email associated with your account." else if(recruiter) "Register your company and create meaningful opportunities. Company approval is required before submission." else if(mode == "signup") "Create an account to keep your progress together." else "Pick up where you left off.")
@@ -174,7 +174,7 @@ import androidx.compose.ui.unit.dp
         OutlinedTextField(email,{ email=it; feedback="" }, label={Text("Email address")},singleLine=true,keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Email),modifier=Modifier.fillMaxWidth())
         if (mode != "reset") OutlinedTextField(password,{password=it; feedback=""},label={Text("Password")},singleLine=true,visualTransformation=if(reveal) VisualTransformation.None else PasswordVisualTransformation(),trailingIcon={TextButton(onClick={reveal=!reveal}){Text(if(reveal) "Hide" else "Show")}},keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Password),modifier=Modifier.fillMaxWidth())
         if(mode=="signup") Text("Use at least 8 characters. Firebase securely manages your password.",style=MaterialTheme.typography.bodySmall,color=Muted)
-        if(feedback.isNotBlank()) InfoCard("Before you continue",feedback,CoralSoft,OrangeInk)
+        if(feedback.isNotBlank()) AlertDialog(onDismissRequest={feedback=""},title={Text(if(mode=="reset") "Password reset" else "Before you continue")},text={Text(feedback)},confirmButton={TextButton(onClick={feedback=""}){Text("OK")}})
         Button(enabled=!request,onClick={
             feedback=when {
                 mode=="signup" && name.isBlank() -> "Enter your name."

@@ -22,7 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
     ModalBottomSheet(onDismissRequest=dismiss,sheetState=rememberModalBottomSheetState(skipPartiallyExpanded=true),containerColor=Paper) {
         Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).imePadding().padding(horizontal=20.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically){
-                Column(Modifier.weight(1f)){Text("Your coach ✦",style=MaterialTheme.typography.headlineSmall,color=BrandDeep);Text("Role & skills guidance",style=MaterialTheme.typography.bodySmall,color=Muted)}
+                Column(Modifier.weight(1f)){Text("Your coach ✦",style=MaterialTheme.typography.headlineSmall,color=BrandDeep);Text("Guided role & skills help",style=MaterialTheme.typography.bodySmall,color=Muted)}
                 TextButton(onClick=dismiss){Text("Close")}
             }
             LazyColumn(state=list,modifier=Modifier.weight(1f).fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(12.dp),contentPadding=PaddingValues(vertical=12.dp)) {
@@ -47,6 +47,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
     ModalBottomSheet(onDismissRequest=dismiss,sheetState=rememberModalBottomSheetState(skipPartiallyExpanded=true),containerColor=Paper) {
         Column(Modifier.fillMaxWidth().fillMaxHeight(0.9f).imePadding()) {
             Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal=24.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
+                TextButton(onClick=dismiss){Text("← Back to Growth")}
                 StatusPill("${step.skill} · PRACTICE ACTIVITY",CoralSoft,OrangeInk)
                 Heading(step.title,"About ${step.minutes} minutes · 25 XP on completion")
                 InfoCard("Your task",step.brief,BrandSoft,BrandDeep)

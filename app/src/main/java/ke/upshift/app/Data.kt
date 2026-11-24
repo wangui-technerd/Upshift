@@ -86,14 +86,9 @@ interface CoachRepository { fun reply(question: String, role: Role?, state: AppS
 class LocalCoachRepository : CoachRepository {
     override fun reply(question: String, role: Role?, state: AppState): String {
         val target = role ?: state.rankedRoles().firstOrNull()
-        val gaps = target?.let { state.gaps(it) }.orEmpty()
-        return when {
-            question.contains("cv", true) || question.contains("experience", true) -> "Start with education, projects and the skills you can demonstrate. For each project, describe the problem, your contribution and the result. Paid experience is optional. You can build your CV from the You page."
-            question.contains("score", true) || question.contains("match", true) || question.contains("why", true) -> if (target == null || state.score(target) == null) "Add your skills in You to see a comparison with each role’s requirements." else "${target.title} has a ${state.score(target)}% skills match: ${target.skills.size - gaps.size} of ${target.skills.size} required skills are in your profile. ${if (gaps.isEmpty()) "Review the eligibility requirements before preparing your application." else "Skills to develop: ${gaps.joinToString()}."} The percentage describes skills coverage, not your chance of being hired."
-            question.contains("eligib", true) -> target?.eligibility?.joinToString("\n\n") ?: "Open a role to check its location, study level and availability requirements. Skills fit and eligibility are separate."
-            question.contains("learn", true) || question.contains("next", true) || question.contains("week", true) || question.contains("gap", true) -> if (gaps.isEmpty()) "Choose a target role, review its requirements and prepare a project example for your CV. Your growth path contains practical activities for missing skills." else "For ${target?.title}, begin with ${gaps.first()}. ${LearningLibrary.firstOrNull { it.skill == gaps.first() }?.brief.orEmpty()} Open Growth to save evidence and track your progress."
-            else -> "I can help explain a skills match, identify a next learning step, review eligibility or help you structure your CV. Which would you like to explore?"
-        }
+        val namedRole = state.rankedRoles().firstOrNull { question.contains(it.title, true) || question.contains(it.company, true) }
+        val selected = namedRole ?: target
+        return careerReply(question, selected, selected?.let { state.gaps(it) }.orEmpty(), selected?.let { state.score(it) }, state.profile)
     }
 }
 class AppState(context: Context, val repository: OpportunitiesRepository = RealOpportunitiesRepository(context), private val scorer: MatchScorer = SkillCoverageScorer(), val coach: CoachRepository = LocalCoachRepository()) {

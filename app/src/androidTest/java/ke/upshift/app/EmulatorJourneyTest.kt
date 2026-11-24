@@ -50,6 +50,7 @@ class EmulatorJourneyTest {
     @Before fun prepare() {
         Assume.assumeTrue("Local emulator build required", BuildConfig.FIREBASE_EMULATORS)
         check(BuildConfig.AI_BASE_URL == "http://10.0.2.2:8124") { "Use the local test gateway, not a live service." }
+        device.wakeUp();device.executeShellCommand("wm dismiss-keyguard")
         device.executeShellCommand("svc wifi enable");device.executeShellCommand("svc data enable")
         awaitGateway()
         control("mode", JSONObject().put("mode", "normal"))
@@ -106,7 +107,7 @@ class EmulatorJourneyTest {
             state.update(state.profile.copy(name="Amina Test",education="Year 3 Computer Science",skills="Python, SQL",location="Nairobi",projects="Built a Python API and SQL project."))
             state.enter()
         } }
-        waitText("Get job recommendations")
+        waitText("For you")
         return email
     }
     private fun control(path: String, body: JSONObject): JSONObject {
@@ -123,31 +124,31 @@ class EmulatorJourneyTest {
 
     @Test fun a_authenticationOnboardingAndPersistence() {
         click("Get started"); click("Skip")
-        click("Create account"); waitText("Enter your name.")
+        click("Create account"); waitText("Enter your name.");click("OK")
         fill("Full name","Amina Test"); fill("Email address","invalid")
-        click("Create account");waitText("Enter a valid email address.")
+        click("Create account");waitText("Enter a valid email address.");click("OK")
         val email=email();fill("Email address",email);fill("Password",password)
         click("Create account");waitText("Let’s start with you")
         fill("Education / programme","Year 3 Computer Science");fill("Location","Nairobi")
         click("Continue");waitText("What can you do today?")
         fill("Other skills, separated by commas","Python, SQL")
-        click("Continue");click("See my matches");waitText("Get job recommendations")
+        click("Continue");click("See my matches");waitText("For you")
         val uid=ui.activity.state.userId!!
-        ui.activityRule.scenario.recreate();waitText("Get job recommendations")
+        ui.activityRule.scenario.recreate();waitText("For you")
         Assert.assertEquals("Python, SQL",ui.activity.state.profile.skills)
         val persisted=runBlocking { ui.activity.state.backend.loadUser(uid) }
         Assert.assertEquals("Python, SQL",(persisted["profile"] as Map<*,*>)["skills"])
         menu("Sign out");waitText("Get started")
         click("Log in");fill("Email address",email);fill("Password","Wrong-password-2026")
-        click("Log in");waitText("Could not authenticate.",substring=true)
-        fill("Password",password);click("Log in");waitText("Get job recommendations")
+        click("Log in");waitText("Could not authenticate.",substring=true);click("OK")
+        fill("Password",password);click("Log in");waitText("For you")
         menu("Sign out");click("Log in");click("Forgot password?")
         fill("Email address",email);click("Send reset link")
         waitText("If an account exists",substring=true)
     }
 
     @Test fun b_realRecommendationsLinksAndFeedback() {
-        signedIn();click("Get job recommendations")
+        signedIn();click("For you")
         fill("Experience in months (optional)","1201")
         reveal("Find jobs").assertIsNotEnabled()
         fill("Experience in months (optional)","6")
@@ -155,7 +156,8 @@ class EmulatorJourneyTest {
         waitText("Python Software Intern (Demo)")
         println("UPSHIFT_TIMING recommendations_ms=${SystemClock.elapsedRealtime()-start}")
         ui.activityRule.scenario.recreate();waitText("Python Software Intern (Demo)")
-        reveal("Required skills your profile doesn’t mention").assertExists()
+        click("Why this job? ↓")
+        reveal("Check these skills").assertExists()
         reveal("Docker",substring=true).assertExists()
         Intents.init()
         try {
@@ -165,28 +167,28 @@ class EmulatorJourneyTest {
         } finally { Intents.release() }
         click("Back");menu("Feedback")
         fill("Feedback about UpShift","The app is helpful and clear.")
-        click("Analyse feedback");waitText("Feedback sentiment:",substring=true)
+        click("Send feedback");waitText("Thank you. Your feedback has been received.")
         val before=ui.activity.state.profile
         ui.activityRule.scenario.recreate();waitText("Feedback about UpShift")
-        waitText("Feedback sentiment:",substring=true)
+        waitText("Thank you. Your feedback has been received.")
         Assert.assertEquals(before,ui.activity.state.profile)
     }
 
     @Test fun c_errorsSlowResponsesAndRetry() {
-        signedIn();click("Get job recommendations");fill("Experience in months (optional)","6")
+        signedIn();click("For you");fill("Experience in months (optional)","6")
         control("mode",JSONObject().put("mode","empty"));click("Find jobs")
         waitText("No active vacancies match your profile and filters.")
         control("mode",JSONObject().put("mode","unavailable"));click("Find jobs")
-        waitText("The recommendations service is temporarily unavailable. Try again later.")
+        waitText("We couldn’t complete that just now. Please try again shortly.");click("OK")
         control("mode",JSONObject().put("mode","normal"));click("Retry recommendations")
         waitText("Python Software Intern (Demo)")
         control("mode",JSONObject().put("mode","slow"));click("Find jobs")
         waitText("Still looking for vacancies.",substring=true);waitText("Python Software Intern (Demo)")
         control("mode",JSONObject().put("mode","timeout"));click("Find jobs")
-        waitText("The server took too long. Try again.")
+        waitText("This is taking longer than usual. Please try again.");click("OK")
         control("mode",JSONObject().put("mode","unauthorized"));click("Retry recommendations")
-        waitText("The backend couldn't verify your sign-in.",substring=true)
-        reveal("Sign in again").assertExists()
+        waitText("Please sign in again to continue. Your text is still here.")
+        reveal("Sign in").assertExists();device.pressBack()
         Assert.assertEquals("Python, SQL",ui.activity.state.profile.skills)
         control("mode",JSONObject().put("mode","normal"));click("Retry recommendations")
         waitText("Python Software Intern (Demo)")
@@ -195,8 +197,8 @@ class EmulatorJourneyTest {
             device.executeShellCommand("svc wifi disable");device.executeShellCommand("svc data disable")
             click("Find jobs")
             ui.waitUntil(60_000) {
-                ui.onAllNodesWithText("Couldn’t reach the backend.",substring=true).fetchSemanticsNodes().isNotEmpty() ||
-                    ui.onAllNodesWithText("The server took too long. Try again.").fetchSemanticsNodes().isNotEmpty()
+                ui.onAllNodesWithText("Check your internet connection and try again. Your text is still here.",substring=true).fetchSemanticsNodes().isNotEmpty() ||
+                    ui.onAllNodesWithText("This is taking longer than usual. Please try again.").fetchSemanticsNodes().isNotEmpty()
             }
         } finally {
             device.executeShellCommand("cmd connectivity airplane-mode disable")
@@ -292,7 +294,7 @@ class EmulatorJourneyTest {
             device.executeShellCommand("settings put system font_scale 1.3")
             ui.waitUntil(10_000) { ui.activity.resources.configuration.fontScale >= 1.29f }
             ui.activityRule.scenario.recreate()
-            waitText("Get job recommendations")
+            waitText("For you")
             click("You");click("Build my CV")
             fill("Projects and achievements","Created Python and SQL projects with tests. ".repeat(45))
             click("Preview my CV");waitText("Your CV preview")

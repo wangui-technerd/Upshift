@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.Locale
+import java.util.UUID
 
 @Composable
 internal fun RecommendationsScreen(state: AppState, editProfile: () -> Unit, signIn: () -> Unit, back: () -> Unit) {
@@ -41,7 +41,7 @@ internal fun RecommendationsScreen(state: AppState, editProfile: () -> Unit, sig
         }
     }
 
-    AiPage("Job recommendations", "Find active vacancies using the skills and experience in your profile.", back) {
+    AiPage("For you", "Find active vacancies using the skills and experience in your profile.", back) {
         when {
             state.userId == null -> {
                 Text("You're browsing as a guest. Sign in to find recommendations for your student profile.")
@@ -121,36 +121,42 @@ internal fun RecommendationsScreen(state: AppState, editProfile: () -> Unit, sig
 @Composable
 internal fun FeedbackScreen(state: AppState, signIn: () -> Unit, back: () -> Unit) {
     var draft by rememberSaveable(state.userId) { mutableStateOf("") }
-    var sentiment by rememberSaveable(state.userId) { mutableStateOf<String?>(null) }
+    var submissionId by rememberSaveable(state.userId) { mutableStateOf(UUID.randomUUID().toString()) }
+    var sent by rememberSaveable(state.userId) { mutableStateOf(false) }
+    val snackbar = remember { SnackbarHostState() }
     var failure by remember { mutableStateOf<AiFailure?>(null) }
     var busy by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val client = remember(state.backend) { AiClient(state.backend) }
     val retry = rememberAiRetry()
 
-    AiPage("App feedback", "Tell us what worked and what you’d improve.", back) {
+    LaunchedEffect(sent) { if(sent) snackbar.showSnackbar("Feedback sent. Thank you!") }
+    Box(Modifier.fillMaxSize()) {
+    AiPage("App feedback", "Tell us what worked and what you’d improve. Please leave out personal details.", back) {
         if (state.userId == null) {
-            Text("Sign in to submit feedback for analysis.")
+            Text("Sign in to send feedback.")
             Button(onClick = signIn) { Text("Sign in") }
         } else {
             OutlinedTextField(
                 value = draft,
                 onValueChange = {
-                    if (it.length <= 10000) { draft = it; sentiment = null; failure = null }
+                    if (it.length <= 10000) { draft = it; sent = false; submissionId = UUID.randomUUID().toString(); failure = null }
                 },
                 enabled = !busy,
                 label = { Text("Feedback about UpShift") },
                 minLines = 3,
+                maxLines = 6,
                 modifier = Modifier.fillMaxWidth(),
             )
             Button(
-                enabled = draft.isNotBlank() && !busy && retry.seconds == 0L && failure?.problem != AiProblem.SIGN_IN,
+                enabled = draft.isNotBlank() && !sent && !busy && retry.seconds == 0L && failure?.problem != AiProblem.SIGN_IN,
                 onClick = {
                     busy = true
                     failure = null
                     scope.launch {
                         try {
-                            sentiment = client.sentiment(draft.trim())
+                            client.sendFeedback(draft.trim(), submissionId)
+                            sent = true
                         } catch (e: CancellationException) {
                             throw e
                         } catch (e: AiFailure) {
@@ -161,11 +167,13 @@ internal fun FeedbackScreen(state: AppState, signIn: () -> Unit, back: () -> Uni
                         }
                     }
                 },
-            ) { Text(if (retry.seconds > 0) "Retry in ${retry.seconds}s" else "Analyse feedback") }
-            if (busy) { LinearProgressIndicator(Modifier.fillMaxWidth()); Text("Analysing feedback…") }
-            sentiment?.let { Text("Feedback sentiment: ${it.replaceFirstChar { char -> char.uppercase() }}") }
+            ) { Text(if (retry.seconds > 0) "Retry in ${retry.seconds}s" else if(busy) "Sending…" else if(sent) "Sent" else "Send feedback") }
+            if (busy) { LinearProgressIndicator(Modifier.fillMaxWidth()); Text("Sending feedback…") }
+            if(sent) Text("Thank you. Your feedback has been received.",color=Teal)
             failure?.let { FailureMessage(it, "feedback", signIn) }
         }
+    }
+    SnackbarHost(snackbar,Modifier.align(androidx.compose.ui.Alignment.BottomCenter).imePadding().padding(16.dp))
     }
 }
 
@@ -185,23 +193,29 @@ private fun AiPage(title: String, description: String, back: () -> Unit, content
 private fun RecommendationCard(vacancy: VacancyMatch) {
     val uriHandler = LocalUriHandler.current
     var linkError by remember(vacancy.applicationUrl) { mutableStateOf(false) }
+    var explain by rememberSaveable(vacancy.id) { mutableStateOf(false) }
     OutlinedCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(vacancy.title, style = MaterialTheme.typography.titleLarge)
             Text(listOfNotNull(vacancy.company, vacancy.location).joinToString(" · ").ifBlank { "Company and location unavailable" })
             Text(vacancy.deadline?.let { "Application deadline: $it" } ?: "Application deadline: Unknown")
-            vacancy.similarity?.let { Text("Text similarity: ${String.format(Locale.ROOT, "%.3f", it)}") }
-            vacancy.description?.let { Text(it) }
-            SkillList("Skills shown in your profile", vacancy.matchedSkills, "No skill evidence identified in the profile.")
-            SkillList("Required skills your profile doesn’t mention", vacancy.missingSkills, "No required skill gaps identified.")
-            if (vacancy.requirements.isNotEmpty()) SkillList("Vacancy requirements", vacancy.requirements)
-            if (vacancy.eligibility.isNotEmpty()) SkillList("Check eligibility with the employer", vacancy.eligibility)
+
+            vacancy.description?.let { Text(it,maxLines=if(explain) Int.MAX_VALUE else 3,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis) }
+            TextButton(onClick={explain=!explain}) { Text(if(explain) "Hide explanation ↑" else "Why this job? ↓") }
+            if(explain) {
+                Text("We compared your profile with what this job asks for. Jobs closer to your profile appear first.")
+                SkillList("Skills that match",vacancy.matchedSkills,"No matching skills were found in your profile.")
+                SkillList("Check these skills",vacancy.missingSkills,"No missing required skills were found.")
+                Text("If you have a skill listed here, add it to your profile. A match does not guarantee a job.",style=MaterialTheme.typography.bodySmall)
+                if (vacancy.requirements.isNotEmpty()) SkillList("What the job asks for", vacancy.requirements)
+                if (vacancy.eligibility.isNotEmpty()) SkillList("Who can apply", vacancy.eligibility)
+            }
             val url = vacancy.applicationUrl
             if (url == null) Text("Application link unavailable.")
             else Button(onClick = {
                 linkError = try { uriHandler.openUri(url); false } catch (_: IllegalArgumentException) { true }
             }) { Text("Open application") }
-            if (linkError) Text("Couldn’t open the application link. Try again or check that a browser is installed.")
+            if (linkError) AlertDialog(onDismissRequest={linkError=false},title={Text("Couldn’t open link")},text={Text("Check that a browser is installed, then try again.")},confirmButton={TextButton(onClick={linkError=false}){Text("OK")}})
         }
     }
 }
@@ -214,22 +228,22 @@ private fun SkillList(title: String, values: List<String>, empty: String = "") {
 
 @Composable
 private fun FailureMessage(failure: AiFailure, feature: String, signIn: () -> Unit, edit: (() -> Unit)? = null) {
-    Text(when (failure.problem) {
-        AiProblem.CONFIGURATION -> "The backend address is missing or invalid. Check the app’s API configuration."
-        AiProblem.SIGN_IN -> "Your sign-in session ended. Sign in again to continue."
-        AiProblem.TOKEN_REJECTED -> "The backend couldn't verify your sign-in. Retry or sign in again. If this keeps happening, ask the team to check that the app and backend use the same Firebase project."
-        AiProblem.ACCESS_DENIED -> "This account doesn't have access to $feature. Contact the UpShift team."
-        AiProblem.INVALID_INPUT -> if (edit != null) "Check your profile and filters, then try again." else "Check your feedback and try again."
-        AiProblem.RATE_LIMIT -> "Too many requests. Wait for the retry button to become available."
-        AiProblem.TIMEOUT -> "The server took too long. Try again."
-        AiProblem.NETWORK -> "Couldn’t reach the backend. Check your connection and try again."
-        AiProblem.SERVICE -> "The $feature service is temporarily unavailable. Try again later."
-        AiProblem.RESPONSE -> "The server sent an unexpected response. Try again."
-    }, color = MaterialTheme.colorScheme.error)
-    if (failure.problem in setOf(AiProblem.SIGN_IN, AiProblem.TOKEN_REJECTED)) {
-        TextButton(onClick = signIn) { Text("Sign in again") }
-    }
-    if (failure.problem == AiProblem.INVALID_INPUT && edit != null) TextButton(onClick = edit) { Text("Edit profile") }
+    var visible by remember(failure) { mutableStateOf(true) }
+    if(visible) AlertDialog(
+        onDismissRequest={visible=false},
+        title={Text("Let’s try again")},
+        text={Text(when(failure.problem) {
+            AiProblem.SIGN_IN, AiProblem.TOKEN_REJECTED -> "Please sign in again to continue. Your text is still here."
+            AiProblem.INVALID_INPUT -> "Check your details and try again."
+            AiProblem.RATE_LIMIT -> "Please wait a moment before trying again."
+            AiProblem.NETWORK -> "Check your internet connection and try again. Your text is still here."
+            AiProblem.TIMEOUT -> "This is taking longer than usual. Please try again."
+            AiProblem.ACCESS_DENIED -> "Your account can’t use this feature. Contact the Upshift team."
+            else -> "We couldn’t complete that just now. Please try again shortly."
+        })},
+        confirmButton={TextButton(onClick={visible=false; if(failure.problem in setOf(AiProblem.SIGN_IN,AiProblem.TOKEN_REJECTED))signIn()}) { Text(if(failure.problem in setOf(AiProblem.SIGN_IN,AiProblem.TOKEN_REJECTED))"Sign in" else "OK") }},
+        dismissButton={if(failure.problem==AiProblem.INVALID_INPUT && edit!=null)TextButton(onClick={visible=false;edit()}){Text("Edit profile")}}
+    )
 }
 
 private class AiRetry {

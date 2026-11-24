@@ -45,9 +45,11 @@ import androidx.compose.ui.platform.LocalUriHandler
             }
         }
         item {
-            Button(onClick = recommendations, modifier = Modifier.fillMaxWidth()) {
-                Text("Get job recommendations")
+            Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                FilterChip(selected=true,onClick={},label={Text("Browse")})
+                FilterChip(selected=false,onClick=recommendations,label={Text("For you")})
             }
+            Text("Browse opportunities, or choose For you to compare your profile with active vacancies.",style=MaterialTheme.typography.bodySmall,color=Muted)
         }
         item {OutlinedTextField(query,{query=it},label={Text("Search jobs, skills or location")},singleLine=true,modifier=Modifier.fillMaxWidth(),shape=RoundedCornerShape(12.dp))}
         item {

@@ -46,6 +46,11 @@ fun accountError(error: Exception): String = when (error) {
 
 class FirebaseBackend(context: Context) : AccountGateway {
     private val applicationContext = context.applicationContext
+    fun hasConnection(): Boolean {
+        val manager = applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        val capabilities = manager.getNetworkCapabilities(manager.activeNetwork) ?: return false
+        return capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
     companion object { private val emulatorApps = mutableSetOf<String>() }
     private val app: FirebaseApp? = if (BuildConfig.DEBUG && BuildConfig.FIREBASE_EMULATORS) {
         FirebaseApp.getApps(context).find { it.name == "upshift-emulator" }

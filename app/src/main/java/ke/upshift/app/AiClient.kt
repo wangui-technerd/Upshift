@@ -128,6 +128,14 @@ internal class AiClient(private val backend: FirebaseBackend) {
         return parse { parseVacancies(call("/recommendations", payload)) }
     }
 
+    suspend fun sendFeedback(feedback: String, submissionId: String) {
+        if (feedback.isBlank() || feedback.length > 10000) throw AiFailure(AiProblem.INVALID_INPUT)
+        parse {
+            val result = call("/feedback", JSONObject().put("text", feedback).put("submission_id", submissionId))
+            if (result.optString("status") != "received") throw AiFailure(AiProblem.RESPONSE)
+        }
+    }
+
     suspend fun sentiment(feedback: String): String {
         if (feedback.isBlank() || feedback.length > 10000) throw AiFailure(AiProblem.INVALID_INPUT)
         return parse {
@@ -141,6 +149,7 @@ internal class AiClient(private val backend: FirebaseBackend) {
 
     private suspend fun call(path: String, payload: JSONObject): JSONObject {
         val address = apiAddress(BuildConfig.AI_BASE_URL, path, BuildConfig.DEBUG)
+        if (!backend.hasConnection()) throw AiFailure(AiProblem.NETWORK)
         try {
             val result = authorizedAiRequest(
                 token = { refresh ->

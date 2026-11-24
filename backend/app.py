@@ -4,6 +4,8 @@ import threading
 import time
 from collections import OrderedDict
 from typing import Literal
+from uuid import UUID
+from datetime import datetime, timezone
 from fastapi import Depends, FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -26,6 +28,9 @@ class Recommendations(Body):
 
 class Text(Body):
     text: str = Field(min_length=1, max_length=10000)
+
+class Feedback(Text):
+    submission_id: UUID
 
 class RateLimiter:
     """Bounded single-process limiter; production ingress also needs rate limits."""
@@ -123,6 +128,25 @@ def create_app(model_adapter=None, token_verifier=None, listing_store=None, sour
     @app.post('/sentiment')
     def sentiment(body: Text, uid=Depends(user)):
         return models.sentiment(body.text)
+
+    @app.post('/feedback')
+    def feedback(body: Feedback, uid=Depends(user)):
+        key = ('feedback', str(body.submission_id))
+        def save(rows):
+            existing = rows[key]
+            if existing:
+                if existing['owner_uid'] != uid or existing['text'] != body.text:
+                    raise Problem(409, 'feedback_conflict', 'Please start a new feedback message.')
+                return {}, {'status': 'received', 'id': key[1]}
+            row = {'id': key[1], 'owner_uid': uid, 'text': body.text,
+                   'created_at': datetime.now(timezone.utc).isoformat()}
+            return {key: row}, {'status': 'received', 'id': key[1]}
+        try:
+            return store.transact([key], save)
+        except Problem:
+            raise
+        except Exception:
+            raise Problem(503, 'feedback_unavailable', 'Could not send feedback. Please try again.')
 
     return app
 

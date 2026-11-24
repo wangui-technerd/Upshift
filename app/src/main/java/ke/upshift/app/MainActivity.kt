@@ -75,9 +75,11 @@ class AppFragment : Fragment() {
     }
     val signIn = { leaveStudentWorkspace("login") }
     val signOut = { leaveStudentWorkspace("welcome") }
-    androidx.activity.compose.BackHandler(enabled = state.entered && (coach || practice != null || detail != null || page.isNotEmpty() || tab != "Matches")) {
+    val canGoBack = coach || practice != null || detail != null || page.isNotEmpty() || tab != "Matches"
+    fun goBack() {
         when { coach -> coach = false; practice != null -> practice = null; preview -> preview = false; page == "edit-recommendations" -> page = "recommendations"; page.isNotEmpty() -> page = ""; detail != null -> detail = null; else -> tab = "Matches" }
     }
+    androidx.activity.compose.BackHandler(enabled = !recruiterMode && state.entered && canGoBack) { goBack() }
     UpshiftTheme {
         Box(Modifier.fillMaxSize()) {
             if(recruiterMode) RecruiterWorkspace(state) { workspaceScope.launch { if(state.backend.uid!=null)state.connectAccount();recruiterMode=false;workspacePrefs.edit().putString("last","student").apply() } }
@@ -90,7 +92,10 @@ class AppFragment : Fragment() {
                 topBar = {
                     Surface(color=Paper) {
                         Row(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal=20.dp,vertical=6.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween) {
-                            BrandWordmark()
+                            Row(verticalAlignment=Alignment.CenterVertically) {
+                                if(page.isEmpty() && detail==null && tab!="Matches") TextButton(onClick={goBack()}) { Text("← Back") }
+                                BrandWordmark()
+                            }
                             Box {
                                 IconButton(onClick={menu=true}) { Icon(painterResource(R.drawable.ic_menu),contentDescription="Open menu",tint=BrandDeep) }
                                 DropdownMenu(expanded=menu,onDismissRequest={menu=false}) {
@@ -130,7 +135,7 @@ class AppFragment : Fragment() {
                         page=="feedback" -> key(state.userId) {
                             FeedbackScreen(state, signIn) { page = "" }
                         }
-                        page=="cv" -> CvScreen(state,preview,{preview=it},{page=""})
+                        page=="cv" -> CvScreen(state,preview,{preview=it},{goBack()})
                         page=="edit" -> EditProfileScreen(state){page=""}
                         page=="saved" -> SavedRolesScreen(state,{page=""},{detail=it;page=""})
                         role!=null -> RoleScreen(state,role,{detail=null},{state.target(role);detail=null;tab="Growth"},{page="cv"},{coach=true})

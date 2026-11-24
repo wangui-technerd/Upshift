@@ -34,6 +34,23 @@ class ApiTests(unittest.TestCase):
         self.client = TestClient(create_app(model_adapter=TestModels(), token_verifier=TestVerifier(), listing_store=MemoryStore()))
         self.addCleanup(self.client.close)
         self.headers = {"Authorization":"Bearer test-id-token"}
+    def test_feedback_is_saved_once_and_requires_sign_in(self):
+        from uuid import uuid4
+        store = MemoryStore()
+        with TestClient(create_app(model_adapter=TestModels(), token_verifier=TestVerifier(), listing_store=store)) as client:
+            body = {'text': 'Please add more finance roles.', 'submission_id': str(uuid4())}
+            self.assertEqual(client.post('/feedback', json=body).status_code, 401)
+            for _ in range(2):
+                response = client.post('/feedback', headers=self.headers, json=body)
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.json()['status'], 'received')
+            self.assertEqual(len(store.rows), 1)
+            self.assertEqual(store.get('feedback',body['submission_id'])['text'],body['text'])
+            body['text'] = 'Different message'
+            self.assertEqual(client.post('/feedback',headers=self.headers,json=body).status_code,409)
+            body['submission_id']=str(uuid4());body['text']='   '
+            self.assertEqual(client.post('/feedback',headers=self.headers,json=body).status_code,422)
+
     def test_auth_required_and_invalid_rejected(self):
         self.assertEqual(self.client.post("/recommendations",json={"resume_text":"Kotlin"}).status_code,401)
         self.assertEqual(self.client.post("/sentiment",json={"text":"Helpful"},headers={"Authorization":"Bearer invalid"}).status_code,401)
