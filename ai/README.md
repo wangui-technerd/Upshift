@@ -2,7 +2,7 @@
 
 ## Main notebook for review
 
-Use **[SemanticMatching_Final.ipynb](notebooks/SemanticMatching_Final.ipynb)**. It retains the original cleaning, exploration and modelling work, then adds semantic matching with visual comparisons and short explanations. The three original CSVs are required to rerun it. The semantic encoder is downloaded on the first run.
+Use **[SemanticMatching_Final.ipynb](notebooks/SemanticMatching_Final.ipynb)**. It retains the original cleaning, exploration and modelling work, then includes semantic matching, all shared app-model functions, feedback training, complete export and backend comparison tests. All cells are visible, with short explanations and saved charts. The three original CSVs are required to rerun it. The semantic encoder is downloaded on the first run.
 
 [Open in Colab](https://colab.research.google.com/github/CoIlins/SemProject_MLEngine/blob/main/SemanticMatching_Final.ipynb) · [AI submission repository](https://github.com/CoIlins/SemProject_MLEngine) · [Original base notebook](notebooks/LogisticRegression_Base.ipynb)
 
@@ -16,7 +16,7 @@ This project contains three separate NLP tasks:
 2. **Sentiment comparison:** VADER versus a supervised TF-IDF/logistic-regression classifier on independently labelled TweetEval sentiment data. Sentiment is never used to rank employability.
 3. **CV category classification:** the original logistic regression, SVM and Naive Bayes experiments, retained in the final research notebook separately from semantic job ranking.
 
-The career-category experiments are retained in the final notebook, separately from job ranking. The notebook exports research models; the existing app deployment bundle is unchanged. A conversational generative coach is not implemented by these classifiers.
+The career-category experiments are retained in the final notebook, separately from job ranking. The notebook exports both the research models and the complete backend package. The rebuilt package passed 20 checks against the actual backend adapter; the app’s current model files are unchanged. A conversational generative coach is not implemented by these classifiers.
 
 ## Run
 

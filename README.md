@@ -4,13 +4,13 @@ Project status and remaining submission work: [completion checklist](docs/PROJEC
 
 ## AI notebook
 
-Use **[SemanticMatching_Final.ipynb](ai/notebooks/SemanticMatching_Final.ipynb)**. It builds on the original cleaning, exploration, classifier and matching experiments, then adds semantic matching, visual comparisons and valid/invalid profile examples. Logistic regression classifies CV categories; semantic matching ranks related jobs.
+Use **[SemanticMatching_Final.ipynb](ai/notebooks/SemanticMatching_Final.ipynb)**. It builds on the original cleaning, exploration, classifier and matching experiments, then includes semantic matching, the complete shared app-model code, feedback training, backend-format export and valid/invalid profile examples. All cells are visible. Logistic regression classifies CV categories; semantic matching ranks related jobs.
 
 [Open in Colab](https://colab.research.google.com/github/CoIlins/SemProject_MLEngine/blob/main/SemanticMatching_Final.ipynb) · [Public AI submission repository](https://github.com/CoIlins/SemProject_MLEngine) · [Original base notebook](ai/notebooks/LogisticRegression_Base.ipynb)
 
 The notebook uses short explanations and saved charts. Matching scores check rough title-derived fields, not independently reviewed job relevance. Human relevance ratings and the skill-review exercise remain pending. Similarity does not predict hiring success.
 
-The [existing model handoff folder](https://drive.google.com/drive/folders/1tfmOnYKapGidW1i8TDKwe2CIQjgVpxpX) contains the app model binaries. The notebook saves research models separately; it does not replace the backend deployment bundle. The original base notebook is preserved unchanged.
+The [existing model handoff folder](https://drive.google.com/drive/folders/1tfmOnYKapGidW1i8TDKwe2CIQjgVpxpX) contains the app model binaries. The notebook now also produces a complete backend-compatible package in a separate output folder. It passed 20 comparisons against the existing backend model; it does not deploy or alter the running app. The original base notebook is preserved unchanged.
 
 ## Android frontend
 
