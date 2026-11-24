@@ -2,20 +2,21 @@
 
 ## Main notebook for review
 
-Use **[SemanticMatching_Final.ipynb](notebooks/SemanticMatching_Final.ipynb)**. It contains the full workflow with executed results, five figures and short numbered explanations. It embeds the shared model functions and saves the same schema-2 bundle and encoder format loaded by the app. It requires the three original CSVs; TweetEval and the pretrained encoder are downloaded on a fresh run.
+Use **[SemanticMatching_Final.ipynb](notebooks/SemanticMatching_Final.ipynb)**. It retains the original cleaning, exploration and modelling work, then adds semantic matching with visual comparisons and short explanations. The three original CSVs are required to rerun it. The semantic encoder is downloaded on the first run.
 
 [Open in Colab](https://colab.research.google.com/github/CoIlins/SemProject_MLEngine/blob/main/SemanticMatching_Final.ipynb) · [AI submission repository](https://github.com/CoIlins/SemProject_MLEngine) · [Original base notebook](notebooks/LogisticRegression_Base.ipynb)
 
-Saved outputs and five figures are included for assessment; no setup is needed to read them. Step 1 is a short optional cell for rerunning with your own folder containing the three original CSVs. See the [run instructions](https://github.com/CoIlins/SemProject_MLEngine#read-or-rerun).
+Saved outputs and charts are included for assessment; no setup is needed to read them. Step 1 is a short optional cell for rerunning with your own folder containing the three original CSVs. See the [run instructions](https://github.com/CoIlins/SemProject_MLEngine#read-or-rerun).
 
 Earlier clear-steps notebooks and the standalone service described below remain development history. Use the final notebook for assessment and [the current backend guide](../backend/README.md) for Android integration.
 
-This project contains two separate NLP tasks:
+This project contains three separate NLP tasks:
 
 1. **Job retrieval and skill evidence:** TF-IDF lexical matching and a local pretrained sentence encoder; ESCO concept IDs with explicit local extensions.
 2. **Sentiment comparison:** VADER versus a supervised TF-IDF/logistic-regression classifier on independently labelled TweetEval sentiment data. Sentiment is never used to rank employability.
+3. **CV category classification:** the original logistic regression, SVM and Naive Bayes experiments, retained in the final research notebook separately from semantic job ranking.
 
-The earlier career-category experiment remains in the base notebook; it is not part of the final job-ranking walkthrough. A conversational generative coach is not implemented by these classifiers.
+The career-category experiments are retained in the final notebook, separately from job ranking. The notebook exports research models; the existing app deployment bundle is unchanged. A conversational generative coach is not implemented by these classifiers.
 
 ## Run
 

@@ -4,13 +4,13 @@ Project status and remaining submission work: [completion checklist](docs/PROJEC
 
 ## AI notebook
 
-Use **[SemanticMatching_Final.ipynb](ai/notebooks/SemanticMatching_Final.ipynb)** for the final compiled workflow. It includes cleaning, exploration, model comparisons, evaluation, five figures, valid/invalid examples, and the same schema-2 format loaded by the app. The model workflow was executed from the original data, and all plotting cells were checked. The saved examples were also compared against the app's existing model.
+Use **[SemanticMatching_Final.ipynb](ai/notebooks/SemanticMatching_Final.ipynb)**. It builds on the original cleaning, exploration, classifier and matching experiments, then adds semantic matching, visual comparisons and valid/invalid profile examples. Logistic regression classifies CV categories; semantic matching ranks related jobs.
 
 [Open in Colab](https://colab.research.google.com/github/CoIlins/SemProject_MLEngine/blob/main/SemanticMatching_Final.ipynb) · [Public AI submission repository](https://github.com/CoIlins/SemProject_MLEngine) · [Original base notebook](ai/notebooks/LogisticRegression_Base.ipynb)
 
-The notebook explains the methods in plain language. The small relevance comparison uses one AI-assisted review of 112 pairs from twelve fictional profiles; independent human validation remains pending. Similarity and ranking quality are not hiring probabilities or matching accuracy.
+The notebook uses short explanations and saved charts. Matching scores check rough title-derived fields, not independently reviewed job relevance. Human relevance ratings and the skill-review exercise remain pending. Similarity does not predict hiring success.
 
-The existing [model handoff folder](https://drive.google.com/drive/folders/1tfmOnYKapGidW1i8TDKwe2CIQjgVpxpX) contains the model binaries. The final notebook generates an app-compatible model package locally; large binaries are not committed to GitHub. Earlier notebooks remain available as development history, rather than the final submission.
+The [existing model handoff folder](https://drive.google.com/drive/folders/1tfmOnYKapGidW1i8TDKwe2CIQjgVpxpX) contains the app model binaries. The notebook saves research models separately; it does not replace the backend deployment bundle. The original base notebook is preserved unchanged.
 
 ## Android frontend
 
