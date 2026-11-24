@@ -6,7 +6,7 @@ Use **[MiniLM_Final.ipynb](notebooks/MiniLM_Final.ipynb)**. It contains the full
 
 [Open in Colab](https://colab.research.google.com/github/CoIlins/SemProject_MLEngine/blob/main/MiniLM_Final.ipynb) · [AI submission repository](https://github.com/CoIlins/SemProject_MLEngine) · [Original base notebook](notebooks/LogisticRegression_Base.ipynb)
 
-Step 1 is portable: Colab signs in and reads the original CSVs from the [shared Drive](https://drive.google.com/drive/folders/11kEwky5_pJ6IpLfNWepHzNfzI0vKkW-2); local Jupyter asks for the runner's own dataset folder. Give the lecturer's Google account Viewer access before they run all. See the [run instructions](https://github.com/CoIlins/SemProject_MLEngine#run-it) for both options.
+Saved outputs and five figures are included for assessment; no setup is needed to read them. Step 1 is a short optional cell for rerunning with your own folder containing the three original CSVs. See the [run instructions](https://github.com/CoIlins/SemProject_MLEngine#read-or-rerun).
 
 Earlier clear-steps notebooks and the standalone service described below remain development history. Use the final notebook for assessment and [the current backend guide](../backend/README.md) for Android integration.
 
