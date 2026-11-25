@@ -18,6 +18,9 @@ This project contains three separate NLP tasks:
 
 The career-category experiments are retained in the final notebook, separately from job ranking. The notebook exports both the research models and the complete backend package. The rebuilt package passed 20 checks against the actual backend adapter; the app’s current model files are unchanged. A conversational generative coach is not implemented by these classifiers.
 
+
+The final Section 6 explains the guided chatbot, growth/course lookup and Browse skills percentage, with the actual Kotlin logic visible. These are app rules, not additional trained models.
+
 ## Run
 
 Python 3.12 was used. Install `requirements.txt` in a dedicated environment. For CPU-only PyTorch, install torch from the official CPU index before installing the remaining requirements.
