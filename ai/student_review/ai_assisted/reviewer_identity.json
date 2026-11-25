@@ -1,8 +1,0 @@
-{
-  "reviewer_id": "codex_ai_assisted_1",
-  "reviewer_type": "ai_assisted",
-  "date_completed": "2026-11-22",
-  "rubric_version": "1.0",
-  "independent_human_review": false,
-  "rating_basis": "Authored contextual judgements from student profiles and vacancy descriptions/requirements. Requirement-focused evidence excerpts were used; not an exhaustive human audit of every description. No main-sheet method/rank/split used to assign labels. Unverified location, GPA, equipment and citizenship were kept unknown; explicit unmet mandatory qualifications marked ineligible."
-}

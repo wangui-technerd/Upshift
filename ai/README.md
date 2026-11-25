@@ -1,79 +1,10 @@
-# UpShift NLP model handoff
+# Our AI work
 
-## Main notebook for review
+We keep two notebooks here:
 
-Use **[SemanticMatching_Final.ipynb](notebooks/SemanticMatching_Final.ipynb)**. It retains the original cleaning, exploration and modelling work, then includes semantic matching, all shared app-model functions, feedback training, complete export and backend comparison tests. All cells are visible, with short explanations and saved charts. The three original CSVs are required to rerun it. The semantic encoder is downloaded on the first run.
+- [SemanticMatching_Final.ipynb](notebooks/SemanticMatching_Final.ipynb) — our complete workflow, saved results, charts and the app’s model code.
+- [LogisticRegression_Base.ipynb](notebooks/LogisticRegression_Base.ipynb) — our original base work, preserved unchanged.
 
-[Open in Colab](https://colab.research.google.com/github/CoIlins/SemProject_MLEngine/blob/main/SemanticMatching_Final.ipynb) · [AI submission repository](https://github.com/CoIlins/SemProject_MLEngine) · [Original base notebook](notebooks/LogisticRegression_Base.ipynb)
+We use the final notebook for assessment and model export. We explain the guided chatbot and learning rules at the end. Our earlier scripts and handover records are in [the archive](../archive/ai-development/).
 
-Saved outputs and charts are included for assessment; no setup is needed to read them. Step 1 is a short optional cell for rerunning with your own folder containing the three original CSVs. See the [run instructions](https://github.com/CoIlins/SemProject_MLEngine#read-or-rerun).
-
-Earlier clear-steps notebooks and the standalone service described below remain development history. Use the final notebook for assessment and [the current backend guide](../backend/README.md) for Android integration.
-
-This project contains three separate NLP tasks:
-
-1. **Job retrieval and skill evidence:** TF-IDF lexical matching and a local pretrained sentence encoder; ESCO concept IDs with explicit local extensions.
-2. **Sentiment comparison:** VADER versus a supervised TF-IDF/logistic-regression classifier on independently labelled TweetEval sentiment data. Sentiment is never used to rank employability.
-3. **CV category classification:** the original logistic regression, SVM and Naive Bayes experiments, retained in the final research notebook separately from semantic job ranking.
-
-The career-category experiments are retained in the final notebook, separately from job ranking. The notebook exports both the research models and the complete backend package. The rebuilt package passed 20 checks against the actual backend adapter; the app’s current model files are unchanged. A conversational generative coach is not implemented by these classifiers.
-
-
-The final Section 6 explains the guided chatbot, growth/course lookup and Browse skills percentage, with the actual Kotlin logic visible. These are app rules, not additional trained models.
-
-## Run
-
-Python 3.12 was used. Install `requirements.txt` in a dedicated environment. For CPU-only PyTorch, install torch from the official CPU index before installing the remaining requirements.
-
-```powershell
-python run_pipeline.py --resume-file "path/to/Resume.csv" --jobs-file "path/to/postings.csv" --skills-file "path/to/skills_en.csv" --max-jobs 6000
-python -m pytest tests
-python verify_export.py
-```
-
-A fresh run trains and evaluates from the three original raw CSVs. It also downloads the public sentiment benchmark and pretrained encoder. No CV is sent to a hosted inference API. Local CPU worker count is limited to two. `--reuse-checkpoints` is an explicit recovery option for the same data and unchanged career/sentiment classifier code only; leave it off after changing training data or preprocessing.
-
-The corrected Colab notebook embeds the shared source so it can run without a GitHub checkout. It uses the original files under `MyDrive/UpShift_AI_Data`, writes into its own project folder and preserves the original notebook/data.
-
-## Outputs
-
-- `artifacts/upshift_bundle.joblib`: lexical index, job metadata, stable skill lookup, career classifier and trained sentiment model.
-- `artifacts/semantic_encoder/`: the actual saved encoder, for offline inference.
-- `results/`: measured comparisons, confusion matrices, exact splits/data fingerprints and annotation templates.
-- `upshift_ai_handoff.zip`: Python service code, models, requirements and key results.
-
-Raw datasets, caches, trained artifacts and large result files are ignored by Git. Do not load joblib from an untrusted source. The recorded environment versions and source revisions accompany the export.
-
-## Local API
-
-Unzip the handoff, install requirements, set `UPSHIFT_ARTIFACT_DIR` to that folder and `UPSHIFT_API_TOKEN` to a local secret. From the handoff directory:
-
-```powershell
-python -m uvicorn api:app --host 127.0.0.1 --port 8000
-```
-
-- `GET /health`
-- `POST /recommend`: `{"resume_text":"...","top_k":5,"method":"lexical"}`; method can also be `semantic`.
-- `POST /sentiment`: `{"text":"The recommendations were helpful."}`.
-
-Both POST routes require `Authorization: Bearer <local token>`. The shared token is for local integration only. Public deployment needs verified per-user authentication, HTTPS, limits and operational monitoring; never embed a shared service secret in Android. No public endpoint is deployed by the notebook.
-
-The app can construct `resume_text` from its existing profile fields. PDF/DOCX parsing belongs in a separate validated upload/extraction layer and is not needed for the profile-text contract.
-
-## Scores and eligibility
-
-`similarity` is a raw retrieval score. `skills_match_percentage` is separately computed from explicitly detected required skills; it is null when requirements cannot be established. Neither is a probability of employment. Matched, unmentioned required, unmentioned preferred and other-mentioned skills are separate fields, each with stable IDs.
-
-Results also carry location, work type, experience, dates, expiry and eligibility status. The current catalogue is historical: all sampled postings were expired at this run. `live_only=true` excludes expired or unverified opportunities. This is a complete research pipeline, not a claim of an available Kenyan job feed.
-
-## Evaluation boundaries
-
-The classifier and sentiment comparisons use distinct labels and splits. TweetEval is an external English-tweet benchmark, not validated Kenyan student/app feedback. Job-category compatibility is a **weak proxy**, not independently established recommendation relevance. Human relevance and skill-span evaluation templates are supplied rather than inventing ground truth. Long texts are represented using up to four sampled chunks; this is recorded, not described as full-document coverage.
-
-## Sources
-
-- Original Resume.csv, postings.csv and skills_en.csv supplied by the project; retain their original dataset attribution/terms.
-- TweetEval / SemEval-2017 sentiment: https://github.com/cardiffnlp/tweeteval (exact revision recorded).
-- VADER: https://www.nltk.org/api/nltk.sentiment.vader.html
-- Semantic encoder: https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2 (exact revision recorded; Apache-2.0 model).
-- scikit-learn: https://scikit-learn.org/stable/
+For rerun instructions, see our [AI repository](https://github.com/CoIlins/SemProject_MLEngine). For app integration, see our [backend guide](../backend/README.md). We keep source credits and the model licence in this folder.

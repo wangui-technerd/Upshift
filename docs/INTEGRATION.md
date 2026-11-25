@@ -1,5 +1,7 @@
 # Team integration boundaries
 
+These are our historical planning notes. For the current app setup, we use the [main README](../README.md) and [backend guide](../backend/README.md).
+
 The current local frontend runs without the backend/model. The following interfaces are replaceable:
 
 - `OpportunitiesRepository`: employer listings and eligibility metadata.

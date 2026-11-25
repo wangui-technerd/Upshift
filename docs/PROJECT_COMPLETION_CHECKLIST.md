@@ -1,5 +1,7 @@
 # UpShift project completion checklist
 
+This is our historical working checklist, not the current submission status. We keep our current setup and project overview in the [main README](../README.md).
+
 Reviewed 19 November 2026. Owner names below describe roles; assign the three group members to them.
 
 Use `[x]` only with the stated evidence. Open **P0** tasks block the connected final build; **P1** tasks are recommended submission-quality checks. **Scope** items are conditional, not assumed lecturer requirements. An implemented feature is not automatically verified end to end.
@@ -126,5 +128,5 @@ Update each task with completion date, evidence path/test result and final commi
 
 - `origin/android-recruiter:backend/models.py`, `backend/upshift_inference.py`, `app/src/main/java/ke/upshift/app/AiScreen.kt` and `Data.kt` establish the model-format and main-feed integration gaps.
 - `origin/android-recruiter:docs/BACKEND_API.md`, `GOOGLE_SIGN_IN.md`, `VACANCY_BACKEND.md` and `RECRUITER_ANDROID.md` document configuration and verification boundaries.
-- `ai/notebooks/UpShift_Clear_Steps.ipynb`, the actual local exported model, `docs/VERIFICATION.md` and the isolated backend test run support the completed-work entries.
+- `archive/ai-development/notebooks/UpShift_Clear_Steps.ipynb`, the actual local exported model, `docs/VERIFICATION.md` and the isolated backend test run support the completed-work entries.
 - `origin/android-recruiter:data/listings/README.md` documents research-catalogue status; no new availability verification was performed in this review.
